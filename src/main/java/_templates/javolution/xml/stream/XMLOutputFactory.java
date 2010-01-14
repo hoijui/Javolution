@@ -203,7 +203,7 @@ public abstract class XMLOutputFactory {
         private String _indentation;
 
         // Property setting.
-        private String _lineSeparator;
+        private String _lineSeparator = "\n";
 
         // Implements XMLOutputFactory abstract method.
         public XMLStreamWriter createXMLStreamWriter(Writer writer)
