@@ -577,6 +577,14 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
                         return;
                     }
                 }
+                
+                if(isShared) {
+                	// clear the entries which now are held by submaps
+                    FastMap.reset(_entries);
+                    _nullCount = 0;
+                    _entryCount = 0;
+                }
+                
                 _useSubMaps = ONE_VOLATILE == 1 ? true : false; // Prevents reordering.   
             }
         });
@@ -737,10 +745,8 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
                         next._previous = entry;
                     }
                 } else {
-                    entry._next = null; // TODO: Investigates why we need to do that (see email from Thomas in the issues mailing list)!
-                }                       //       A better solution would be:
-                                        //          1 - Use of non blocking queue for entries (EntryQueue sub-class)
-                                        //          2 - Real sub-map dispatching (with synchro on the submap for shared maps)
+                    // do nothing, preserving the iterator-free iterations of other threads
+                }                       
                 return prevValue;
             }
         }
