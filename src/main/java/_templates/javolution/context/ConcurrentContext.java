@@ -201,12 +201,36 @@ public abstract class ConcurrentContext extends Context {
     }
 
     /**
+     * Enters a concurrent context only if the specified condition is verified.
+     *
+     * @param condition <code>true</code> to enter a concurrent context;
+     *                  <code>false</code> otherwise.
+     */
+    public static void enter(boolean condition) {
+        if (condition) {
+            ConcurrentContext.enter();
+        }
+    }
+
+    /**
      * Exits the current concurrent context.
      * 
      * @throws ClassCastException if the context is not a concurrent context.
      */
     public static void exit() {
         Context.exit(ConcurrentContext.class);
+    }
+
+    /**
+     * Exits a concurrent context only if the specified condition is verified.
+     *
+     * @param condition <code>true</code> to exit a concurrent context;
+     *                  <code>false</code> otherwise.
+     */
+    public static void exit(boolean condition) {
+        if (condition) {
+            ConcurrentContext.exit();
+        }
     }
 
     /**
