@@ -486,19 +486,47 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
         }
 
         // Setup entry.
-        final Entry entry = _tail;
-        entry._key = key;
-        entry._value = value;
-        entry._keyHash = keyHash;
-        if (entry._next == null) {
-            createNewEntries();
+        final Entry entry;
+        if(!_isShared) {
+            entry = _tail;
+            entry._key = key;
+            entry._value = value;
+            entry._keyHash = keyHash;
+            if (entry._next == null) {
+                createNewEntries();
+            }
+            entries[slot] = entry;
+            map._entryCount += ONE_VOLATILE; // Prevents reordering.
+            _tail = _tail._next;
+        } else {
+        	// keep _tail as the same object
+            // check entry caches
+            if (_tail._next == null) {
+                createNewEntries();
+            }
+            // assign entry
+            entry = _tail._next;
+            
+            // step forward in the entry cache
+            _tail._next = entry._next;
+            
+            // populate entry
+            entry._key = key;
+            entry._value = value;
+            entry._keyHash = keyHash;
+            entry._next = _tail;
+            entry._previous = _tail._previous; // backwards
+            
+              // set the hash table slots
+            entries[slot] = entry;
+            map._entryCount += ONE_VOLATILE; // Prevents reordering.
+            // insert into chain at correct location
+            entry._next._previous = entry; // backwards
+            entry._previous._next = entry; // forwards
         }
-        entries[slot] = entry;
-        map._entryCount += ONE_VOLATILE; // Prevents reordering.
-        _tail = _tail._next;
-
+        
         if (map._entryCount + map._nullCount > (entries.length >> 1)) { // Table more than half empty.
-            map.resizeTable(_isShared);
+        	map.resizeTable(_isShared);
         }
         return returnEntry ? entry : null;
     }
