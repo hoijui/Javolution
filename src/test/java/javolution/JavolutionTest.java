@@ -21,10 +21,15 @@ public class JavolutionTest extends junit.framework.TestSuite {
 
     public static junit.framework.Test suite() {
         JavolutionTest suite = new JavolutionTest();
-        for (TestCase test : new TypeFormatTestSuite().tests())
+        for (TestCase test : new TypeFormatTestSuite().tests()) {
             suite.addTest(new JUnitTestCase(test));
-         for (TestCase test : new ContextTestSuite().tests())
+        }
+        for (TestCase test : new ContextTestSuite().tests()) {
             suite.addTest(new JUnitTestCase(test));
+        }
+        for (TestCase test : new StructTestSuite().tests()) {
+            suite.addTest(new JUnitTestCase(test));
+        }
         // ...
         return suite;
     }

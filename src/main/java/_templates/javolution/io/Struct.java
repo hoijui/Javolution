@@ -811,7 +811,7 @@ public class Struct {
             return byteBuffer.getLong(index);
         // Else possible buffer overflow.
         if (byteBuffer.order() == ByteOrder.LITTLE_ENDIAN) {
-            return (readByte(index, byteBuffer) & 0xff) + ((readByte(++index, byteBuffer) & 0xff) << 8) + ((readByte(++index, byteBuffer) & 0xff) << 16) + ((readByte(++index, byteBuffer) & 0xffL) << 24) + ((readByte(++index, byteBuffer) & 0xffL) << 32) + ((readByte(++index, byteBuffer) & 0xffL) << 40) + ((readByte(++index, byteBuffer) & 0xffL) << 48) + (((long) _bytes[++index]) << 56);
+            return (readByte(index, byteBuffer) & 0xff) + ((readByte(++index, byteBuffer) & 0xff) << 8) + ((readByte(++index, byteBuffer) & 0xff) << 16) + ((readByte(++index, byteBuffer) & 0xffL) << 24) + ((readByte(++index, byteBuffer) & 0xffL) << 32) + ((readByte(++index, byteBuffer) & 0xffL) << 40) + ((readByte(++index, byteBuffer) & 0xffL) << 48) + ((readByte(++index, byteBuffer) & 0xffL) << 56);
         } else {
             return (((long) readByte(index, byteBuffer)) << 56) + ((readByte(++index, byteBuffer) & 0xffL) << 48) + ((readByte(++index, byteBuffer) & 0xffL) << 40) + ((readByte(++index, byteBuffer) & 0xffL) << 32) + ((readByte(++index, byteBuffer) & 0xffL) << 24) + ((readByte(++index, byteBuffer) & 0xff) << 16) + ((readByte(++index, byteBuffer) & 0xff) << 8) + (readByte(++index, byteBuffer) & 0xffL);
         }

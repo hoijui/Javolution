@@ -106,6 +106,7 @@ public class Javolution {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         TestContext.run(new ContextTestSuite());
         TestContext.run(new TypeFormatTestSuite());
+        TestContext.run(new StructTestSuite());
      
         TestContext.info("");
         TestContext.info("More tests coming soon...");
