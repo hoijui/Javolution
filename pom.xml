@@ -7,7 +7,7 @@
     <groupId>javolution</groupId>
     <artifactId>javolution</artifactId>
     <packaging>jar</packaging>
-    <version>5.4.3</version> <!-- Update version in build.xml when changed. -->
+    <version>5.4.4</version> <!-- Update version in build.xml when changed. -->
     <name>Javolution</name>
     <url>http://javolution.org</url>
     <description>Javolution - Java Solution for Real-Time and Embedded Systems.

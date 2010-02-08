@@ -558,9 +558,7 @@ public class TextBuilder implements Appendable,
         append(l / 1000000000);
         int i = (int) (l % 1000000000);
         int digits = MathLib.digitLength(i);
-        for (int j = digits; j < 9; j++) {
-            append('0');
-        }
+        append("000000000", 0, digits - 9);
         return append(i);
     }
 
