@@ -344,7 +344,7 @@ public class TextBuilder implements Appendable,
         if (str == null)
             return append("null");
         if ((start < 0) || (end < 0) || (start > end) || (end > str.length()))
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("start: " + start + ", end: " + end + ", str.length(): " + str.length());
         int newLength = _length + end - start;
         while (_capacity < newLength) {
             increaseCapacity();
@@ -558,7 +558,7 @@ public class TextBuilder implements Appendable,
         append(l / 1000000000);
         int i = (int) (l % 1000000000);
         int digits = MathLib.digitLength(i);
-        append("000000000", 0, digits - 9);
+        append("000000000", 0, 9 - digits);
         return append(i);
     }
 
