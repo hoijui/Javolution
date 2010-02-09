@@ -347,6 +347,19 @@ public final class XMLStreamReaderImpl implements XMLStreamReader, Reusable {
     }
 
     /**
+     * Returns the qualified name of the element at the specified level.
+     * This method can be used to retrieve the XPath of the current element.
+     *
+     * @return the qualified name of the element at the specified level.
+     * @throws IllegalArgumentException if <code>depth &gt; getDepth()</code>
+     */
+    public CharArray getQName(int depth) {
+        if (depth > this.getDepth())
+            throw new IllegalArgumentException();
+        return _elemStack[depth];
+    }
+
+    /**
      * Returns the current attributes (SAX2-Like).
      *
      * @return returns the number of attributes.
