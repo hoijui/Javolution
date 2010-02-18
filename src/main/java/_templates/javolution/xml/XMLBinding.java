@@ -279,8 +279,11 @@ public class XMLBinding implements Reusable, XMLSerializable {
             }
         } else {
             if (qName != null) {
-                writer.writeStartElement(qName.getNamespaceURI(), qName
-                        .getLocalName());
+            	if(qName.getNamespaceURI() == null) {
+            		writer.writeStartElement(qName.getLocalName());
+            	} else {
+            		writer.writeStartElement(qName.getNamespaceURI(), qName.getLocalName());
+            	}
             } else {
                 writer.writeStartElement(Javolution.j2meToCharSeq(name));
             }
