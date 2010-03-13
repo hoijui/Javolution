@@ -366,7 +366,7 @@ public abstract class FastCollection/*<E>*/ implements
      * 
      * @return this collection textual representation.
      */
-    public final Text toText() {
+    public Text toText() {
         // We use Text concatenation instead of TextBuilder to avoid copying 
         // the text representation of the record values (unknown length).
         Text text = Text.valueOf("{");
