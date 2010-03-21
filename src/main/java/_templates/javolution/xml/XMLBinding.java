@@ -174,19 +174,16 @@ public class XMLBinding implements Reusable, XMLSerializable {
 
     /**
      * Returns the XML format for the specified class/interface.
-     * The default implementation returns the {@link XMLFormat#getDefault
-     * default} format for the specified class.
+     * The default implementation returns the {@link XMLFormat#getInstance}
+     * for the specified class.
      * 
      * @param forClass the class for which the XML format is returned.
-     * @return the XML format for the specified class.
+     * @return the XML format for the specified class (never <code>null</code>).
      * @throws XMLStreamException if there is no format for the
      *         specified class.
      */
     protected XMLFormat getFormat(Class forClass) throws XMLStreamException  {
-         XMLFormat xmlFormat = XMLFormat.getDefault(forClass);
-         if (xmlFormat == null)
-              throw new XMLStreamException("No XML format found for " + forClass);
-         return xmlFormat;
+         return XMLFormat.getInstance(forClass);
     }
 
     /**

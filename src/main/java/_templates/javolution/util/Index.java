@@ -9,16 +9,22 @@
 package _templates.javolution.util;
 
 import _templates.java.io.ObjectStreamException;
+import _templates.javolution.text.Appendable;
 import _templates.java.lang.Comparable;
 import _templates.java.lang.Number;
 import _templates.java.util.List;
 import _templates.javax.realtime.MemoryArea;
+import _templates.java.lang.CharSequence;
 import _templates.javolution.lang.Configurable;
 import _templates.javolution.lang.Immutable;
 import _templates.javolution.lang.Realtime;
+import _templates.javolution.text.Cursor;
 import _templates.javolution.text.Text;
+import _templates.javolution.text.TextFormat;
+import _templates.javolution.text.TypeFormat;
 import _templates.javolution.util.FastCollection.Record;
 import _templates.javolution.xml.XMLSerializable;
+import java.io.IOException;
 
 /**
  * <p> This class represents a <b>unique</b> index which can be used instead of 
@@ -47,6 +53,21 @@ import _templates.javolution.xml.XMLSerializable;
  */
 public final class Index extends Number implements 
         Comparable/*<Index>*/, Record, Realtime, Immutable, XMLSerializable  {
+
+    /**
+     * Holds the default text format.
+     */
+    static final TextFormat TEXT_FORMAT = new TextFormat(Index.class) {
+
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Index) obj).intValue(), dest);
+        }
+
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return Index.valueOf(TypeFormat.parseInt(csq, 10, cursor));
+        }
+    };
 
     /**
      * Holds the index zero (value <code>0</code>).
@@ -252,7 +273,7 @@ public final class Index extends Number implements
      * 
      * @return the index value.
      */
-    public final int intValue() {
+    public int intValue() {
         return _value;
     }
 
@@ -261,7 +282,7 @@ public final class Index extends Number implements
      * 
      * @return the index value.
      */
-    public final long longValue() {
+    public long longValue() {
         return intValue();
     }
     
@@ -270,7 +291,7 @@ public final class Index extends Number implements
      * 
      * @return the index value.
      */
-    public final float floatValue() {
+    public float floatValue() {
         return (float) intValue();
     }
 
@@ -279,18 +300,17 @@ public final class Index extends Number implements
      * 
      * @return the index value.
      */
-    public final double doubleValue() {
+    public double doubleValue() {
         return (double) intValue();
     }
-
 
     /**
      * Returns the <code>String</code> representation of this index.
      * 
-     * @return this index value formatted as a string.
+     * @return <code>TextFormat.getInstance(Cursor.class).formatToString(_value)</code>
      */
-    public final String toString() {
-        return String.valueOf(_value);
+    public String toString() {
+        return TextFormat.getInstance(Index.class).formatToString(this);
     }
 
     /**
@@ -338,7 +358,7 @@ public final class Index extends Number implements
 
     // Implements Realtime interface.
     public Text toText() {
-        return Text.valueOf(_value);
+        return TextFormat.getInstance(Index.class).format(this);
     }
 
     private static final long serialVersionUID = 1L;

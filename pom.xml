@@ -1,20 +1,20 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <!-- Project Information -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>javolution</groupId>
     <artifactId>javolution</artifactId>
     <packaging>jar</packaging>
-    <version>5.4.4</version> <!-- Update version in build.xml when changed. -->
+    <version>5.4.5</version> <!-- Update version in build.xml when changed. -->
     <name>Javolution</name>
     <url>http://javolution.org</url>
     <description>Javolution - Java Solution for Real-Time and Embedded Systems.
-This project uses template classes to generates java code for various versions
-of the Java run-time (e.g. J2ME, 1.4, GCJ, 1.5). The default maven compilation
-builds executable for Java 1.5+ (parameterized classes).
-For others targets the ant script should be used directly (e.g. "ant j2me").
+        This project uses template classes to generates java code for various versions
+        of the Java run-time (e.g. J2ME, 1.4, GCJ, 1.5). The default maven compilation
+        builds executable for Java 1.5+ (parameterized classes).
+        For others targets the ant script should be used directly (e.g. "ant j2me").
     </description>
     <licenses>
         <license>
@@ -33,11 +33,6 @@ For others targets the ant script should be used directly (e.g. "ant j2me").
             <email>jean-marie@dautelle.com</email>
         </developer>
     </developers>
-    <scm>
-        <connection>scm:cvs:pserver:guest@cvs.dev.java.net:/cvs:javolution</connection>
-        <developerConnection>scm:cvs:pserver:${maven.username}@cvs.dev.java.net:/cvs:javolution</developerConnection>
-        <url>https://javolution.dev.java.net/source/browse/javolution/</url>
-    </scm>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -49,7 +44,7 @@ For others targets the ant script should be used directly (e.g. "ant j2me").
 
     <!-- Build Settings -->
     <build>
-      <plugins>
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -109,18 +104,25 @@ For others targets the ant script should be used directly (e.g. "ant j2me").
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>bin</descriptorRef>
-                        <descriptorRef>project</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>site</phase>
+                        <id>attach-sources</id>
                         <goals>
-                            <goal>single</goal>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>

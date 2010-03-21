@@ -382,6 +382,7 @@ public final class XMLStreamWriterImpl implements XMLStreamWriter, Reusable {
         while (_nesting > 0) { // Implicits closing of all elements.
             writeEndElement();
         }
+        flush(); // Not mandatory but safer.
     }
 
     // Implements XMLStreamWriter interface.

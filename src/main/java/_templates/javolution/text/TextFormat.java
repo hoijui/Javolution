@@ -14,108 +14,89 @@ import _templates.java.lang.CharSequence;
 import _templates.javolution.Javolution;
 import _templates.javolution.context.LocalContext;
 import _templates.javolution.lang.ClassInitializer;
+import _templates.javolution.lang.Realtime;
 import _templates.javolution.lang.Reflection;
 import _templates.javolution.text.Appendable;
-import _templates.javolution.util.LocalMap;
-import _templates.java.lang.ThreadLocal;
+import _templates.javolution.util.FastMap;
 
 /**
  * <p> This class represents the base format for text parsing and formatting; 
  *     it supports the {@link CharSequence} and {@link Appendable} interfaces 
  *     for greater flexibility.</p>
  * 
- * <p> Typically, classes for which textual parsing/formatting is supported
- *     have a <code>protected static final</code> TextFormat instance
- *     holding the default format for the class. For input/output
- *     (e.g. valueOf(CharSequence), toString()), the {@link LocalContext
- *     context-local} format (or current format) should be used.
+ * <p> Instances of this class are typically used as static member of a 
+ *     class to define the default textual representation of its instances.
  *     [code]
- *     public class Complex implements ValueType {
- *         // Defines the default format for Complex (cartesian).
- *         protected static final TextFormat<Complex> TEXT_FORMAT = new TextFormat<Complex>(Complex.class) {
- *             ...
+ *     public class Complex extends Number {
+ * 
+ *         // Defines the default format for complex numbers (Cartesian form)
+ *         private static TextFormat<Complex> CARTESIAN_FORMAT = new TextFormat<Complex> (Complex.class) { ... }
+ *
+ *         public static Complex valueOf(CharSequence csq) {
+ *             return CARTESIAN_FORMAT.parse(csq);
  *         }
- *         public Complex valueOf(CharSequence csq) {
- *             // Uses the local format for Complex numbers.
- *             return TextFormat.getInstance(Complex.class).parse(csq);
- *         }
- *         public Text toText() {
- *             // Uses the local format for Complex numbers.
- *             return TextFormat.getInstance(Complex.class).format(this);
- *         }
- *     }
- *     [/code]
- * <p> It is possible to retrieve either the {@link #getDefault default} format 
- *     for any class or the {@link #getInstance current} format which
- *     can be locally overriden on a thread basis.
+ *
+ *     }[/code]
+ *     The format associated to any given class/object can be dynamically retrieved.
  *     [code]
- *     Complex c = Complex.valueOf(3, 4);
- *     System.out.println(c); // Display using the default cartesian format (e.g. "2.1 - 3.2i")
- *     TextFormat<Complex> polarFormat = new TextFormat<Complex>(null) { ... }; // Creates an unbounded format.
+ *     public abstract class Number implements ValueType {
+ *
+ *         public final Text toText() {
+ *             return TextFormat.getInstance(this.getClass()).format(this);
+ *         }
+ *
+ *         public final String toString() {
+ *             return TextFormat.getInstance(this.getClass()).formatToString(this);
+ *         }
+ *     }[/code]
+ *     The default format can be locally overriden.
+ *     [code]
  *     LocalContext.enter();
  *     try {
- *         TextFormat.setInstance(polarFormat, Complex.class); // Context-local setting.
- *         System.out.println(c); // Display using the local polar format.
+ *          TextFormat<Complex> polarFormat = new TextFormat<Complex>(null) {...} // Unbound format.
+ *          TextFormat.setInstance(Complex.class, polarFormat); // Local setting (no impact on others thread).
+ *          System.out.println(complex); // Displays complex in polar coordinates.
  *     } finally {
- *         LocalContext.exit(); // Reverts to the default cartesian format for complex numbers.
- *     }
- *     [/code]</p>
+ *          LocalContext.exit(); // Reverts to previous cartesian setting.
+ *     }[/code]
+ * </p>
  *
  * <p> For parsing/formatting of primitive types, the {@link TypeFormat}
  *     utility class is recommended.</p>
  *     
  * @author <a href="mailto:jean-marie@dautelle.com">Jean-Marie Dautelle </a>
- * @version 5.4, November 2, 2009
+ * @version 5.5, March 20, 2010
  */
 public abstract class TextFormat/*<T>*/ {
 
     /**
-     * Holds the class to format mapping (context local).
+     * Holds the default mapping (class to local references).
      */
-    private static final LocalMap CLASS_TO_FORMAT = new LocalMap();
+    private static final FastMap CLASS_TO_FORMAT = new FastMap().setShared(true);
 
     /**
-     * Holds the class associated to this format (static instances)
-     * or <code>null</code> if the format is unbound.
-     */
-    private final Class/*<T>*/ _class;
-
-    /**
-     * Creates a new text format and if a class is specified, makes it the
-     * default format for all instances of the class. The actual format (local)
-     * for a given class can be retrieved through the
-     * {@link #getInstance(java.lang.Class)} static method.
+     * Defines the static format bound to the specified class.
      *
-     * @param cls the class for which this format is the default format or
-     *        <code>null</code> to return an unbounded format.
-     * @throws IllegalArgumentException if the specified class has already a
-     *         default text format associated with (which can only be overriden
-     *         by local formats, see {@link #setInstance}
+     * @param forClass the class to which the format is bound or <code>null</code>
+     *        if the format is not bound to any class.
+     * @throws IllegalArgumentException if the specified class is already
+     *         bound to another format.
      */
-    protected TextFormat(Class/*<T>*/ cls) {
-        _class = cls;
-        if (cls == null)
-            return;
-        if (CLASS_TO_FORMAT.containsKey(cls))
-            throw new IllegalArgumentException(
-                    "Class " + cls + " has already a default text format, " +
-                    "only local override using the TextFormat.setInstance(...)" +
-                    " method is allowed.");
-        CLASS_TO_FORMAT.putDefault(cls, this);
+    protected TextFormat(Class/*<T>*/ forClass) {
+        if (forClass != null) {
+            if (CLASS_TO_FORMAT.containsKey(forClass))
+                throw new IllegalArgumentException("Class " + forClass + " already bound to another text format");
+            CLASS_TO_FORMAT.put(forClass, new LocalContext.Reference(this));
+        }
     }
 
     /**
-     * <p> Returns the default text format for instances of specified type.
-     *     If there is no text format for the specified type, a text format
-     *     for the implementing interfaces is searched. If still none is found
-     *     a recurcive search is performed on the parent class.</p>
-     *
-     * <p> Default format instances are typically defined as <code>protected
-     *     static final</code> instances in their {@link #getBoundClass() bound}
-     *     class.</code></p>
-     *
-     * <p> The following predefined types have a default format:<code><ul>
-     *       <li>java.lang.Object (formatting only)</li>
+     * <p> Returns the most specialized format found compatible with
+     *     the specified class.</p>
+     * 
+     * <p> A default text format exist for the following predefined types:
+     *     <code><ul>
+     *       <li>java.lang.Object (formatting only, e.g. "org.acmes.Foo#123")</li>
      *       <li>java.lang.String</li>
      *       <li>java.lang.Boolean</li>
      *       <li>java.lang.Character</li>
@@ -126,103 +107,66 @@ public abstract class TextFormat/*<T>*/ {
      *       <li>java.lang.Float</li>
      *       <li>java.lang.Double</li>
      *       <li>java.lang.Class</li>
-     *     </ul></code></p>
-     *
-     * @param  forClass the class for which the default format is returned.
-     * @return the default format for instances of the specified class or
-     *         <code>null</code> is none found for the class itself, its
-     *          parent classes or implementing interfaces.
-     */
-    public static /*<T>*/ TextFormat/*<T>*/ getDefault(Class/*<? extends T>*/ forClass) {
-        TextFormat format = (TextFormat) CLASS_TO_FORMAT.getDefault(forClass);
-        if (format != null)
-            return format;
-        ClassInitializer.initialize(forClass); // Ensures class static initializer are run.
-        return searchDefaultFormat(forClass);
-    }
-
-    private static TextFormat searchDefaultFormat(Class forClass) {
-        // Searches if format associated to the class itself.
-        TextFormat format = (TextFormat) CLASS_TO_FORMAT.getDefault(forClass);
-        if (format != null)
-            return format;
-
-        // Searches the format associated to the implementing interface.
-        Class[] interfaces = Reflection.getInstance().getInterfaces(forClass);
-        for (int i = 0; i < interfaces.length; i++) {
-            format = (TextFormat) CLASS_TO_FORMAT.getDefault(interfaces[i]);
-            if (format != null)
-                return format;
-        }
-
-        // Recursion with the parent class.
-        Class parentClass = Reflection.getInstance().getSuperclass(forClass);
-        return parentClass != null ? searchDefaultFormat(parentClass) : null;
-    }
-
-    /**
-     * <p> Returns the current text format for instances of specified type.
-     *     If there is no text format for the specified type, a text format
-     *     for the implementing interfaces is searched. If still none is found
-     *     a recurcive search is performed on the parent class.</p>
-     *
-     * <p> If the text format has not been {@link #setInstance
-     *    overriden} then the {@link #getDefault default} is returned.</p>
-     *
-     * @param  forClass the class for which the current format is returned.
-     * @return the current format for instances of the specified class or
-     *         <code>null</code> if none.
-     * @see LocalMap
+     *       <li>javolution.util.Index</li>
+     *       <li>javolution.text.Text</li>
+     *    </ul></code>
+     *    If there is no format found for the specified type, the format for
+     *    <code>java.lang.Object</code> is returned (formatting only).
+     * </p>
+     * 
+     * @param  forClass the class to which a format has been bound.
+     * @return the most specialized format compatible with the specified class
+     *         or if none found the format for <code>java.lang.Object</code>
      */
     public static/*<T>*/ TextFormat/*<T>*/ getInstance(Class/*<? extends T>*/ forClass) {
-        TextFormat format = (TextFormat) CLASS_TO_FORMAT.get(forClass);
-        if (format != null)
-            return format;
+        LocalContext.Reference ref = (LocalContext.Reference) CLASS_TO_FORMAT.get(forClass);
+        if (ref != null) {
+            TextFormat format = (TextFormat) ref.get();
+            if (format != null)
+                return format;
+        }
         ClassInitializer.initialize(forClass); // Ensures class static initializer are run.
-        return searchLocalFormat(forClass);
+        return searchFormat(forClass);
     }
 
-    private static TextFormat searchLocalFormat(Class forClass) {
-        // Searches if format associated to the class itself.
-        TextFormat format = (TextFormat) CLASS_TO_FORMAT.get(forClass);
-        if (format != null)
-            return format;
-
-        // Searches the format associated to the implementing interface.
-        Class[] interfaces = Reflection.getInstance().getInterfaces(forClass);
-        for (int i = 0; i < interfaces.length; i++) {
-            format = (TextFormat) CLASS_TO_FORMAT.get(interfaces[i]);
+    private static TextFormat searchFormat(Class forClass) {
+        LocalContext.Reference ref = (LocalContext.Reference) CLASS_TO_FORMAT.get(forClass);
+        if (ref != null) {
+            TextFormat format = (TextFormat) ref.get();
             if (format != null)
                 return format;
         }
 
         // Recursion with the parent class.
         Class parentClass = Reflection.getInstance().getSuperclass(forClass);
-        return parentClass != null ? searchLocalFormat(parentClass) : null;
+        return parentClass == null ? OBJECT_FORMAT : searchFormat(parentClass);
     }
 
     /**
-     * Overrides the current format for the specified class
-     * ({@link javolution.context.LocalContext context-local}).
-     * 
-     * @param format the format for instances of the specified class.
-     * @param forClass the class for which the text format is overriden.
-     * @see #getInstance
-     * @see LocalMap
-     */
-    public static/*<T>*/ void setInstance(TextFormat/*<T>*/ format, Class/*<T>*/ forClass) {
-        CLASS_TO_FORMAT.put(forClass, format); // Local setting.
-    }
-
-    /**
-     * Returns the class/interface statically bound to this format or
-     * <code>null</code> if this text format is not the default format
-     * for the specified class.
+     * Overrides the format for the specified class ({@link LocalContext local setting}).
      *
-     * @return the class/interface bound to this format or <code>null</code>
+     * @param forClass the class for which the format is locally overriden.
+     * @param format the new format (typically unbound) or <code>null</code> to
+     *        remove (locally) the previous binding.
      */
-    public final Class/*<T>*/ getBoundClass() {
-        return _class;
+    public static/*<T>*/ void setInstance(Class/*<? extends T>*/ forClass, TextFormat/*<T>*/ format) {
+        ClassInitializer.initialize(forClass); // Ensures class static initializer are run.
+        LocalContext.Reference ref = (LocalContext.Reference) CLASS_TO_FORMAT.get(forClass);
+        if (ref == null) {
+            ref = new LocalContext.Reference(null); // Sets default to null.
+            CLASS_TO_FORMAT.put(forClass, ref);
+        }
+        ref.set(format);
+    }
+
+    /**
+     * Indicates if this format supports parsing (default <code>true</code>).
+     *
+     * @return <code>false</code> if any of the parse method throws
+     *         <code>UnsupportedOperationException</code>
+     */
+    public boolean isParsingSupported() {
+        return true;
     }
 
     /**
@@ -258,9 +202,10 @@ public abstract class TextFormat/*<T>*/ {
      * @param dest the text builder destination.
      * @return the specified text builder.
      */
-    public final Appendable format(Object/*{T}*/ obj, TextBuilder dest) {
+    public final TextBuilder format(Object/*{T}*/ obj, TextBuilder dest) {
         try {
-            return format(obj, (Appendable) dest);
+            format(obj, (Appendable) dest);
+            return dest;
         } catch (IOException e) {
             throw new Error(); // Cannot happen.
         }
@@ -277,8 +222,29 @@ public abstract class TextFormat/*<T>*/ {
     public final Text format(Object/*{T}*/ obj) {
         TextBuilder tb = TextBuilder.newInstance();
         try {
-            format(obj, tb);
+            format(obj, (Appendable) tb);
             return tb.toText();
+        } catch (IOException e) {
+            throw new Error(); // Cannot happen.
+        } finally {
+            TextBuilder.recycle(tb);
+        }
+    }
+
+    /**
+     * Convenience methods equivalent to but faster than
+     * <code>format(obj).toString())</code>
+     *
+     * @param obj the object being formated.
+     * @return the string representing the specified object.
+     */
+    public final String formatToString(Object/*{T}*/ obj) {
+        TextBuilder tb = TextBuilder.newInstance();
+        try {
+            format(obj, (Appendable) tb);
+            return tb.toString();
+        } catch (IOException e) {
+            throw new Error(); // Cannot happen.
         } finally {
             TextBuilder.recycle(tb);
         }
@@ -305,134 +271,110 @@ public abstract class TextFormat/*<T>*/ {
             Cursor.recycle(cursor);
         }
     }
+    //
+    // Sets the default formats for predefined types.
+    //
+    static final TextFormat OBJECT_FORMAT = new TextFormat(Object.class) {
 
-    /**
-     * Returns textual information about this format.
-     *
-     * @return this format textual information.
-     */
-    public String toString() {
-        Class boundClass = getBoundClass();
-        return (boundClass != null) ? "Default TextFormat for " + boundClass.getName() : "Dynamic TextFormat (" + this.hashCode() + ")";
-    }
-    // Predefined formats.
-    static final TextFormat OBJECT_FORMAT =
-            new TextFormat(Object.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            dest.append(Javolution.j2meToCharSeq(obj.getClass().getName()));
+            dest.append('#');
+            return TypeFormat.format(System.identityHashCode(obj), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    if (RECURSION_CHECK.get().equals(Boolean.TRUE))
-                        throw new _templates.java.lang.UnsupportedOperationException(
-                                "Infinite recursion detected. TextFormat for Object.class " +
-                                "uses toString() which in turn uses TextFormat." +
-                                "A specialized TextFormat for the class " + obj.getClass() + " should be defined");
-                    RECURSION_CHECK.set(Boolean.TRUE);
-                    try {
-                        String str = obj.toString();
-                        return dest.append(Javolution.j2meToCharSeq(str));
-                    } finally {
-                        RECURSION_CHECK.set(Boolean.FALSE);
-                    }
-                }
+        public boolean isParsingSupported() {
+            return false;
+        }
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    throw new _templates.java.lang.UnsupportedOperationException(
-                            "TextFormat for object to be parsed is missing");
-                }
-            };
+        public Object parse(CharSequence csq, Cursor cursor) {
+            throw new _templates.java.lang.UnsupportedOperationException("Parsing not supported");
+        }
+    };
 
-    private static final ThreadLocal RECURSION_CHECK = new ThreadLocal();
+    static final TextFormat STRING_FORMAT = new TextFormat(String.class) {
 
-    static final TextFormat STRING_FORMAT =
-            new TextFormat(String.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return dest.append(Javolution.j2meToCharSeq(obj));
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return dest.append(Javolution.j2meToCharSeq(obj));
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return csq.subSequence(cursor.getIndex(), csq.length()).toString();
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return csq.subSequence(cursor.getIndex(), csq.length()).toString();
-                }
-            };
+    static final TextFormat BOOLEAN_FORMAT = new TextFormat(Boolean.class) {
 
-    static final TextFormat BOOLEAN_FORMAT =
-            new TextFormat(Boolean.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Boolean) obj).booleanValue(), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Boolean) obj).booleanValue(), dest);
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return TypeFormat.parseBoolean(csq, cursor) ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return TypeFormat.parseBoolean(csq, cursor) ? Boolean.TRUE : Boolean.FALSE;
-                }
-            };
+    static final TextFormat CHARACTER_FORMAT = new TextFormat(Character.class) {
 
-    static final TextFormat CHARACTER_FORMAT =
-            new TextFormat(Character.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return dest.append(((Character) obj).charValue());
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return dest.append(((Character) obj).charValue());
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Character(cursor.nextChar(csq));
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Character(cursor.nextChar(csq));
-                }
-            };
+    static final TextFormat BYTE_FORMAT = new TextFormat(Byte.class) {
 
-    static final TextFormat BYTE_FORMAT =
-            new TextFormat(Byte.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Byte) obj).byteValue(), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Byte) obj).byteValue(), dest);
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Byte(TypeFormat.parseByte(csq, 10, cursor));
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Byte(TypeFormat.parseByte(csq, 10, cursor));
-                }
-            };
+    static final TextFormat SHORT_FORMAT = new TextFormat(Short.class) {
 
-    static final TextFormat SHORT_FORMAT =
-            new TextFormat(Short.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Short) obj).shortValue(), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Short) obj).shortValue(), dest);
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Short(TypeFormat.parseShort(csq, 10, cursor));
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Short(TypeFormat.parseShort(csq, 10, cursor));
-                }
-            };
+    static final TextFormat INTEGER_FORMAT = new TextFormat(Integer.class) {
 
-    static final TextFormat INTEGER_FORMAT =
-            new TextFormat(Integer.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Integer) obj).intValue(), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Integer) obj).intValue(), dest);
-                }
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Integer(TypeFormat.parseInt(csq, 10, cursor));
+        }
+    };
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Integer(TypeFormat.parseInt(csq, 10, cursor));
-                }
-            };
+    static final TextFormat LONG_FORMAT = new TextFormat(Long.class) {
 
-    static final TextFormat LONG_FORMAT =
-            new TextFormat(Long.class) {
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Long) obj).longValue(), dest);
+        }
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Long) obj).longValue(), dest);
-                }
-
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Long(TypeFormat.parseLong(csq, 10, cursor));
-                }
-            };
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Long(TypeFormat.parseLong(csq, 10, cursor));
+        }
+    };
 
     static final TextFormat FLOAT_FORMAT = new TextFormat(Float.class) {
 
@@ -446,36 +388,49 @@ public abstract class TextFormat/*<T>*/ {
         }
     };
 
-    static final TextFormat DOUBLE_FORMAT =
-            new TextFormat(Double.class) {
+    static final TextFormat DOUBLE_FORMAT = new TextFormat(Double.class) {
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return TypeFormat.format(((Double) obj).doubleValue(), dest);
-                }
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Double) obj).doubleValue(), dest);
+        }
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    return new Double(TypeFormat.parseDouble(csq, cursor));
-                }
-            };
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return new Double(TypeFormat.parseDouble(csq, cursor));
+        }
+    };
 
-    static final TextFormat CLASS_FORMAT =
-            new TextFormat(Class.class) {
+    static final TextFormat CLASS_FORMAT = new TextFormat(Class.class) {
 
-                public Appendable format(Object obj, Appendable dest)
-                        throws IOException {
-                    return dest.append(Javolution.j2meToCharSeq(((Class) obj).getName()));
-                }
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return dest.append(Javolution.j2meToCharSeq(((Class) obj).getName()));
+        }
 
-                public Object parse(CharSequence csq, Cursor cursor) {
-                    CharSequence className = cursor.nextToken(csq, CharSet.WHITESPACES);
-                    if (className == null)
-                        throw new IllegalArgumentException("No class name found");
-                    Class cls = Reflection.getInstance().getClass(className);
-                    if (cls != null)
-                        return cls;
-                    throw new IllegalArgumentException("Class \"" + className + "\" not found (see javolution.lang.Reflection)");
-                }
-            };
+        public Object parse(CharSequence csq, Cursor cursor) {
+            CharSequence className = cursor.nextToken(csq, CharSet.WHITESPACES);
+            if (className == null)
+                throw new IllegalArgumentException("No class name found");
+            Class cls = Reflection.getInstance().getClass(className);
+            if (cls != null)
+                return cls;
+            throw new IllegalArgumentException("Class \"" + className + "\" not found (see javolution.lang.Reflection)");
+        }
+    };
+
+    static final TextFormat TEXT_FORMAT = new TextFormat(Text.class) {
+
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return dest.append((Text) obj);
+        }
+
+        public Object parse(CharSequence csq, Cursor cursor) {
+            CharSequence subCsq = csq.subSequence(cursor.getIndex(), csq.length());
+            if (subCsq instanceof Realtime)
+                return ((Realtime) subCsq).toText();
+            return Text.valueOf(subCsq.toString());
+        }
+    };
 
 }

@@ -333,8 +333,8 @@ public abstract class Configurable/*<T>*/ {
     // and the associated textual format.
     Class type = cfg.getDefault().getClass();
     TextFormat format = TextFormat.getInstance(type);
-    if (format == null) {
-    LogContext.error("Cannot find TextFormat for instance of " + type);
+    if (!format.isParsingSupported()) {
+    LogContext.error("Cannot find suitable TextFormat to parse instances of " + type);
     continue;
     }
     Object newValue = format.parse(_templates.javolution.Javolution.j2meToCharSeq(textValue));

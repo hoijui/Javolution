@@ -51,7 +51,7 @@ import java.io.IOException;
  *          
  *         // XML format with positional associations (members identified by their position),
  *         // see XML package description for examples of name associations.
- *         protected static final XMLFormat<Graphic> XML_FORMAT = new XMLFormat<Graphic>(Graphic.class) {
+ *         protected static final XMLFormat<Graphic> GRAPHIC_XML = new XMLFormat<Graphic>(Graphic.class) {
  *              public void write(Graphic g, OutputElement xml) {
  *                  xml.setAttribute("isVisible", g._isVisible); 
  *                  xml.add(g._paint); // First.
@@ -72,7 +72,7 @@ import java.io.IOException;
  *     formatting/parsing of XML attributes should always be performed before 
  *     formatting/parsing of the XML content.</p>
  * 
- * <p> The default mapping between classes and XML formats can be overriden
+ * <p> The mapping between classes and XML formats can be overriden
  *     through {@link XMLBinding} instances.
  *     Here is an example of serialization/deserialization:[code]
  *     
@@ -81,21 +81,15 @@ import java.io.IOException;
  *     list.add("John Doe");
  *     list.add(null);
  *     Map map = new FastMap();
- *     map.put("ONE", new Integer(1));
- *     map.put("TWO", new Integer(2));
+ *     map.put("ONE", 1);
+ *     map.put("TWO", 2);
  *     list.add(map);
  *     
  *     // Use of custom binding.
- *     XMLBinding binding = new XMLBinding() {
- *          protected XMLFormat getFormat(Class forClass) throws XMLSreamException  {
- *              return Map.class.isAssignableFrom(forClass) ?
- *                  myMapFormat : super.getFormat(forClass); // Overrides the default format for Map instances.
- *          }
- *     }
+ *     XMLBinding binding = new XMLBinding();
  *     binding.setAlias(FastMap.class, "Map");
  *     binding.setAlias(String.class, "String");
  *     binding.setAlias(Integer.class, "Integer");
- *     binding.set
  *     
  *     // Formats the list to XML .
  *     OutputStream out = new FileOutputStream("C:/list.xml");
@@ -151,9 +145,9 @@ public abstract class XMLFormat/*<T>*/ {
     private final Class/*<T>*/ _class;
 
     /**
-     * Creates a XML format mapped to the specified class. If the specified 
-     * class is <code>null</code> then the format is left unmapped  
-     * (unbound formats used by custom {@link XMLBinding binding} instances).
+     * Defines the default XML format bound to the specified class.
+     * If the specified class is <code>null</code> then the format is unbound
+     * (unbound formats are used by custom {@link XMLBinding binding} instances).
      * The static binding is unique and can only be overriden by custom
      * {@link XMLBinding}. For example:[code]
      *    // Overrides default binding for java.util.Collection.
@@ -167,7 +161,6 @@ public abstract class XMLFormat/*<T>*/ {
      *            }
      *        }
      *    }[/code]
-     * 
      * 
      * @param cls the root class/interface to associate to this XML format
      *        or <code>null</code> if this format is not bound.
@@ -185,18 +178,25 @@ public abstract class XMLFormat/*<T>*/ {
     }
 
     /**
-     * Returns the default format for the specified class/interface.
-     * If there no direct mapping for the specified class, a mapping
-     * for the interfaces being implemented is searched, if still none is found
-     * a recurcive search is performed on the superclass. For non-interface
-     * this method never returns  <code>null</code> as
-     * the mapping for {@link #OBJECT_XML object} will always be found.
-     * For a list of all predefined (default) formats see the 
-     * <code>protected static</code> members of {@link XMLFormat}.
+     * <p> Returns the default format for the specified class/interface.
+     *     If there no direct mapping for the specified class, the mapping
+     *     for its implemented interfaces is searched, if none is found
+     *     the mapping for its parents classes is searched, if still none is
+     *     found the format for <code>java.lang.Object</code> is returned.</p>
      *
+     * <p> A default xml format exists for the following predefined types:
+     *     <code><ul>
+     *       <li>java.lang.Object</li>
+     *       <li>java.util.Collection</li>
+     *       <li>java.util.Map</li>
+     *    </ul></code>
+     *    The default XML representation (java.lang.Object) consists of the
+     *    of a "value" attribute holding its textual representation
+     *    (see {@link TextFormat#getInstance}).</p>
+      *
      * @return the class/interface bound to this format.
      */
-    public static /*<T>*/ XMLFormat/*<T>*/ getDefault(Class/*<? extends T>*/ forClass) {
+    public static /*<T>*/ XMLFormat/*<T>*/ getInstance(Class/*<? extends T>*/ forClass) {
         XMLFormat format = (XMLFormat) CLASS_TO_FORMAT.get(forClass);
         if (format != null) return format;
         ClassInitializer.initialize(forClass); // Ensures class static initializer are run.
@@ -217,7 +217,7 @@ public abstract class XMLFormat/*<T>*/ {
 
         // Recursion with the parent class.
         Class parentClass = Reflection.getInstance().getSuperclass(forClass);
-        return parentClass != null ? searchDefaultFormat(parentClass) : null;
+        return parentClass != null ? searchDefaultFormat(parentClass) : OBJECT_XML;
     }
 
     /**
@@ -705,7 +705,7 @@ public abstract class XMLFormat/*<T>*/ {
             // Parses attribute value.
             Class type = defaultValue.getClass();
             TextFormat format = TextFormat.getInstance(type);
-            if (format == null)
+            if (!format.isParsingSupported())
                 throw new XMLStreamException("No TextFormat instance for " + type);
             return (Object/*{T}*/) format.parse(value);
         }
@@ -1065,8 +1065,6 @@ public abstract class XMLFormat/*<T>*/ {
                 return;
             Class type = value.getClass();
             TextFormat format = TextFormat.getInstance(type);
-            if (format == null)
-                throw new XMLStreamException("No TextFormat instance for " + type);
             setAttribute(name, (TextBuilder) format.format(value,
                     _tmpTextBuilder.clear()));
         }
@@ -1092,65 +1090,24 @@ public abstract class XMLFormat/*<T>*/ {
     }
 
     /**
-     * Holds the static XML format for <code>Object.class</code> instances
-     * (default format when a more specialized format does not exist).
-     * The XML representation consists of an empty element with no attribute.
+     * Holds the static XML format for <code>java.lang.Object.class</code> instances.
+     * The XML representation consists of the text representation of the object
+     * as a "value" attribute.
      */
-    protected static final XMLFormat/*<Object>*/OBJECT_XML = new XMLFormat(Object.class) {
-
-        public void read(_templates.javolution.xml.XMLFormat.InputElement xml, Object obj) {
-            // Do nothing.
-        }
-
-        public void write(Object obj, _templates.javolution.xml.XMLFormat.OutputElement xml) {
-            // Do nothing
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Class</code>
-     * instances. This representation consists of a <code>"name"</code>
-     * attribute holding the class name.
-     */
-    protected static final XMLFormat/*<Class>*/CLASS_XML = new XMLFormat(Class.class) {
-
-        public boolean isReferenceable() {
+    static final XMLFormat/*<Object>*/OBJECT_XML = new XMLFormat(Object.class) {
+      public boolean isReferenceable() {
             return false; // Always by value (immutable).
         }
 
         public Object newInstance(Class cls,
                 _templates.javolution.xml.XMLFormat.InputElement xml)
                 throws XMLStreamException {
-            CharArray name = xml.getAttribute("name");
-            if (name == null)
-                throw new XMLStreamException("Attribute 'name' missing");
-            Class clazz = Reflection.getInstance().getClass(name);
-            if (clazz == null) throw new XMLStreamException("Class " + clazz + " not found (see javolution.lang.Reflection)");
-            return clazz;
-        }
-
-        public void read(_templates.javolution.xml.XMLFormat.InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, _templates.javolution.xml.XMLFormat.OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("name", ((Class) obj).getName());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.String</code>
-     * instances. This representation consists of a <code>"value"</code>
-     * attribute holding the string.
-     */
-    protected static final XMLFormat/*<String>*/STRING_XML = new XMLFormat(String.class) {
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return xml.getAttribute("value", "");
+            CharArray value = xml.getAttribute("value");
+            if (value == null) throw new XMLStreamException("value attribute missing");
+            TextFormat format = TextFormat.getInstance(cls);
+            if (!format.isParsingSupported())
+                throw new XMLStreamException("No text format with parsing supported for instances of " + cls);
+            return format.parse(value);
         }
 
         public void read(InputElement xml, Object obj)
@@ -1160,36 +1117,12 @@ public abstract class XMLFormat/*<T>*/ {
 
         public void write(Object obj, OutputElement xml)
                 throws XMLStreamException {
-            xml.setAttribute("value", (String) obj);
-        }
-    };
-
-    /**
-     * Holds the default XML representation for {@link Appendable}
-     * instances. This representation consists of a <code>"value"</code> attribute
-     * holding the characters.
-     */
-    protected static final XMLFormat/*<Appendable>*/APPENDABLE_XML = new XMLFormat(
-            Appendable.class) {
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            CharSequence csq = xml.getAttribute("value");
-            if (csq != null) {
-                try {
-                    ((Appendable) obj).append(csq);
-                } catch (IOException e) {
-                    throw new XMLStreamException(e);
-                }
-            }
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            if (obj instanceof CharSequence) {
-                xml.setAttribute("value", (CharSequence) obj);
-            } else {
-                xml.setAttribute("value", obj.toString());
+            TextBuilder tmp = TextBuilder.newInstance();
+            try {
+                TextFormat.getInstance(obj.getClass()).format(obj, tmp);
+                xml.setAttribute("value", tmp);
+            } finally {
+                TextBuilder.recycle(tmp);
             }
         }
     };
@@ -1201,7 +1134,7 @@ public abstract class XMLFormat/*<T>*/ {
      * the collection iterator order. Collections are deserialized using their
      * default constructor.
      */
-    protected static final XMLFormat/*<Collection>*/COLLECTION_XML = new XMLFormat(
+    static final XMLFormat/*<Collection>*/COLLECTION_XML = new XMLFormat(
             _templates.java.util.Collection.class) {
 
         public void read(InputElement xml, Object obj)
@@ -1237,7 +1170,7 @@ public abstract class XMLFormat/*<T>*/ {
      * The elements' order is defined by the map's entries iterator order.
      * Maps are deserialized using their default constructor.
      */
-    protected static final XMLFormat/*<Map>*/MAP_XML = new XMLFormat(_templates.java.util.Map.class) {
+    static final XMLFormat/*<Map>*/MAP_XML = new XMLFormat(_templates.java.util.Map.class) {
 
         public void read(InputElement xml, Object obj)
                 throws XMLStreamException {
@@ -1257,521 +1190,6 @@ public abstract class XMLFormat/*<T>*/ {
                 xml.add(entry.getKey(), "Key");
                 xml.add(entry.getValue(), "Value");
             }
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Object[]</code>
-     * instances. This representation consists of nested XML elements one for
-     * each element of the array.
-     /*@JVM-1.4+@
-     protected static final XMLFormat
-     /**/
-    /*<Object[]>*/
-    /*@JVM-1.4+@
-             OBJECT_ARRAY_XML = new XMLFormat(
-             new Object[0].getClass()) {
-                 public Object newInstance(Class cls, javolution.xml.XMLFormat.InputElement xml) throws XMLStreamException {
-                     Class componentType = cls.getComponentType();
-                     int length = xml.getAttribute("length", 0);
-                     return java.lang.reflect.Array.newInstance(componentType, length);
-                 }
-
-                 public void read(InputElement xml, Object obj) throws XMLStreamException {
-                     Object[] array = (Object[]) obj;
-                     for (int i=0; i < array.length; i++) {
-                         array[i] = xml.getNext();
-                     }
-                 }
-
-                 public void write(Object obj, OutputElement xml) throws XMLStreamException {
-                     Object[] array = (Object[]) obj;
-                     xml.setAttribute("length", array.length);
-                     for (int i=0; i < array.length; i++) {
-                         xml.add(array[i]);
-                     }
-                 }
-             };
-             /**/
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Boolean</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Boolean>*/BOOLEAN_XML = new XMLFormat(
-            Boolean.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return xml.getAttribute("value", false) ? Boolean.TRUE
-                    : Boolean.FALSE;
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Boolean) obj).booleanValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Byte</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Byte>*/BYTE_XML = new XMLFormat(Byte.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Byte((byte) xml.getAttribute("value", 0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Byte) obj).byteValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Character</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Character>*/CHARACTER_XML = new XMLFormat(
-            Character.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            CharSequence csq = xml.getAttribute("value");
-            if ((csq == null) || (csq.length() != 1))
-                throw new XMLStreamException(
-                        "Missing or invalid value attribute");
-            return new Character(csq.charAt(0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", Text.valueOf(((Character) obj)
-                    .charValue()));
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Short</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Short>*/SHORT_XML = new XMLFormat(Short.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Short((short) xml.getAttribute("value", 0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Short) obj).shortValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Integer</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Integer>*/INTEGER_XML = new XMLFormat(
-            Integer.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Integer(xml.getAttribute("value", 0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Integer) obj).intValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Long</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Long>*/LONG_XML = new XMLFormat(Long.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Long(xml.getAttribute("value", 0L));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Long) obj).longValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Float</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Float>*/
-    FLOAT_XML = new XMLFormat(Float.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Float(xml.getAttribute("value", 0f));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Float) obj).floatValue());
-        }
-    };
-
-    /**
-     * Holds the default XML representation for <code>java.lang.Double</code>.
-     * This representation consists of a single <code>"value"</code> attribute
-     * holding the value.
-     */
-    protected static final XMLFormat/*<Double>*/
-    DOUBLE_XML = new XMLFormat(Double.class) {
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            return new Double(xml.getAttribute("value", 0.0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Double) obj).doubleValue());
-        }
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    // JAVOLUTION XML FORMAT (HERE TO AVOID LOADING XML FRAMEWORK IF NOT USED)//
-    ////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Holds the default XML representation for Text instances.
-     * This representation consists of a <code>"value"</code> attribute
-     * holding the characters.
-     */
-    protected static final XMLFormat/*<Text>*/TEXT_XML = new XMLFormat(
-            _templates.javolution.text.Text.class) {
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            CharSequence csq = xml.getAttribute("value");
-            return csq != null ? Text.valueOf(csq) : Text.EMPTY;
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", (Text) obj);
-        }
-    };
-
-    /**
-     * Holds the default XML representation for FastMap instances.
-     * This representation is identical to {@link XMLFormat#MAP_XML}
-     * except that it may include the key/value comparators for the map
-     * (if different from {@link FastComparator#DEFAULT}) and the
-     * {@link FastMap#isShared() "shared"} attribute.
-     */
-    protected static final XMLFormat/*<FastMap>*/FAST_MAP_XML = new XMLFormat(
-            FastMap.class) {
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            final FastMap fm = (FastMap) obj;
-            fm.setShared(xml.getAttribute("shared", false));
-            FastComparator keyComparator = (FastComparator) xml
-                    .get("KeyComparator");
-            if (keyComparator != null) {
-                fm.setKeyComparator(keyComparator);
-            }
-            FastComparator valueComparator = (FastComparator) xml
-                    .get("ValueComparator");
-            if (valueComparator != null) {
-                fm.setValueComparator(valueComparator);
-            }
-            while (xml.hasNext()) {
-                Object key = xml.get("Key");
-                Object value = xml.get("Value");
-                fm.put(key, value);
-            }
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            final FastMap fm = (FastMap) obj;
-            if (fm.isShared()) {
-                xml.setAttribute("shared", true);
-            }
-            if (fm.getKeyComparator() != FastComparator.DEFAULT) {
-                xml.add(fm.getKeyComparator(), "KeyComparator");
-            }
-            if (fm.getValueComparator() != FastComparator.DEFAULT) {
-                xml.add(fm.getValueComparator(), "ValueComparator");
-            }
-            for (FastMap.Entry e = fm.head(), end = fm.tail(); (e = (FastMap.Entry) e.getNext()) != end;) {
-                xml.add(e.getKey(), "Key");
-                xml.add(e.getValue(), "Value");
-            }
-        }
-    };
-
-    /**
-     * Holds the default XML representation for FastCollection instances.
-     * This representation is identical to {@link XMLFormat#COLLECTION_XML}.
-     */
-    protected static final XMLFormat/*<FastCollection>*/FAST_COLLECTION_XML = new XMLFormat(
-            _templates.javolution.util.FastCollection.class) {
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            FastCollection fc = (FastCollection) obj;
-            while (xml.hasNext()) {
-                fc.add(xml.getNext());
-            }
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            FastCollection fc = (FastCollection) obj;
-            for (Record r = fc.head(), end = fc.tail(); (r = r.getNext()) != end;) {
-                xml.add(fc.valueOf(r));
-            }
-        }
-    };
-
-    /**
-     * Holds the default XML representation for FastComparator instances
-     * (format ensures unicity of predefined comparator).
-     */
-    protected static final XMLFormat/*<FastComparator>*/FAST_COMPARATOR_XML = new XMLFormat(
-            _templates.javolution.util.FastComparator.class) {
-
-        public Object newInstance(Class cls,
-                _templates.javolution.xml.XMLFormat.InputElement xml)
-                throws XMLStreamException {
-            if (cls == FastComparator.DEFAULT.getClass())
-                return FastComparator.DEFAULT;
-            if (cls == FastComparator.DIRECT.getClass())
-                return FastComparator.DIRECT;
-            if (cls == FastComparator.IDENTITY.getClass())
-                return FastComparator.IDENTITY;
-            if (cls == FastComparator.LEXICAL.getClass())
-                return FastComparator.LEXICAL;
-            if (cls == FastComparator.REHASH.getClass())
-                return FastComparator.REHASH;
-            if (cls == FastComparator.STRING.getClass())
-                return FastComparator.STRING;
-            return super.newInstance(cls, xml);
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-    };
-
-    /**
-     * Holds the default XML representation for indexes.
-     * This presentation consists of a <code>"value"</code> attribute
-     * holding the index <code>int</code> value.
-     */
-    protected static final XMLFormat/*<Index>*/INDEX_XML = new XMLFormat(Index.class) {
-
-        public boolean isReferenceable() {
-            return false; // Always by value (immutable).
-        }
-
-        public Object newInstance(Class cls, InputElement xml)
-                throws XMLStreamException {
-            return Index.valueOf(xml.getAttribute("value", 0));
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing.
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            xml.setAttribute("value", ((Index) obj).intValue());
-        }
-    };
-
-    /**
-     * Holds the XML representation for persistent contexts
-     * (holds persistent reference mapping).
-     */
-    protected static final XMLFormat/*<PersistentContext>*/PERSISTENT_CONTEXT_XML = new XMLFormat(
-            PersistentContext.class) {
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            final PersistentContext ctx = (PersistentContext) obj;
-            ctx.getIdToValue().putAll((FastMap) xml.get("References"));
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            final PersistentContext ctx = (PersistentContext) obj;
-            xml.add(ctx.getIdToValue(), "References");
-        }
-    };
-
-    /**
-     * Holds the default XML representation of a configurable. Because
-     * configurable instances are unique. Deserialisation of a configurable
-     * returns this unique instance (typically public static) and configure
-     * its value accordingly. The default XML representation consists of
-     * the name of the configurable as an attribute and its optional new value
-     * as a nested element. For example:[code]
-     *   <javolution.lang.Configurable name="javolution.context.ConcurrentContext#MAXIMUM_CONCURRENCY" />
-     *      <Value class="java.lang.Integer" value="0"/>
-     *   </javolution.lang.Configurable>
-     * [/code]
-     * XML configuration files can be read directly using the
-     * {@link #read(java.io.InputStream)} utility method.
-     */
-    protected static final XMLFormat/*<Configurable>*/ CONFIGURABLE_XML = new XMLFormat(Configurable.class) {
-
-        public Object newInstance(Class cls, InputElement xml) throws XMLStreamException {
-            return Configurable.getInstance(xml.getAttribute("name", ""));
-        }
-
-        public void write(Object c, OutputElement xml) throws XMLStreamException {
-            Configurable cfg = (Configurable) c;
-            xml.setAttribute("name", cfg.getName());
-            xml.add(cfg.get(), "Value");
-        }
-
-        public void read(InputElement xml, Object c) throws XMLStreamException {
-            Object value = xml.get("Value");
-            if (value == null)
-                return; // Optional value not present.
-            Configurable.configure((Configurable) c, value);
-        }
-    };
-
-    /**
-     * Holds the XML representation for QName
-     * This presentation consists of a <code>"namespaceURI"</code> attribute
-     * and a<code>localName</code> attribute.
-     */
-    protected static final XMLFormat/*<QName>*/ QNAME_XML = new XMLFormat(QName.class) {
-
-        public Object newInstance(Class cls, InputElement xml)
-                throws XMLStreamException {
-            CharSequence namespaceURI = xml.getAttribute("namespaceURI");
-            CharSequence localName = xml.getAttribute("localName");
-            return QName.valueOf(namespaceURI, localName);
-        }
-
-        public void read(InputElement xml, Object obj)
-                throws XMLStreamException {
-            // Do nothing (attribute already read).
-        }
-
-        public void write(Object obj, OutputElement xml)
-                throws XMLStreamException {
-            QName qName = (QName) obj;
-            xml.setAttribute("namespaceURI", qName.getNamespaceURI());
-            xml.setAttribute("localName", qName.getLocalName());
         }
     };
 

@@ -796,8 +796,8 @@ public class Struct {
         if ((bitOffset + bitSize - 1) >> 3 >= this.size())
             throw new IllegalArgumentException("Attempt to read outside the Struct");
         int offset = bitOffset >> 3;
-        int bitStart = (byteOrder() == ByteOrder.BIG_ENDIAN) ? bitOffset - (offset << 3)
-                : 64 - bitSize - (bitOffset - (offset << 3));
+        int bitStart = bitOffset - (offset << 3);
+        bitStart = (byteOrder() == ByteOrder.BIG_ENDIAN) ? bitStart : 64 - bitSize - bitStart;
         int index = getByteBufferPosition() + offset;
         long value = readByteBufferLong(index);
         value <<= bitStart; // Clears preceding bits
@@ -1041,11 +1041,21 @@ public class Struct {
         }
 
         public boolean get() {
-            return readBits(bitOffset(), bitSize()) != 0;
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return getByteBuffer().get(index) != 0;
+            } else { // Else bitfields
+                return readBits(bitOffset(), bitSize()) != 0;
+            }
         }
 
         public void set(boolean value) {
-            writeBits(value ? -1 : 0, bitOffset(), bitSize());
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().put(index, (byte) (value ? -1 : 0));
+            } else { // Else bitfields
+                writeBits(value ? -1 : 0, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1067,11 +1077,21 @@ public class Struct {
         }
 
         public byte get() {
-            return (byte) readBits(bitOffset(), bitSize());
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return getByteBuffer().get(index);
+            } else { // Else bitfields
+                return (byte) readBits(bitOffset(), bitSize());
+            }
         }
 
         public void set(byte value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().put(index, value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1093,12 +1113,22 @@ public class Struct {
         }
 
         public short get() {
-            long signedValue = readBits(bitOffset(), bitSize());
-            return (short) (0xFF & signedValue);
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return (short) (0xFF & getByteBuffer().get(index));
+            } else { // Else bitfields
+                long signedValue = readBits(bitOffset(), bitSize());
+                return (short) (0xFF & signedValue);
+            }
         }
 
         public void set(short value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 8) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().put(index, (byte) value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1120,11 +1150,21 @@ public class Struct {
         }
 
         public short get() {
-            return (short) readBits(bitOffset(), bitSize());
+            if (bitSize() == 16) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return getByteBuffer().getShort(index);
+            } else { // Else bitfields
+                return (short) readBits(bitOffset(), bitSize());
+            }
         }
 
         public void set(short value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 16) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().putShort(index, value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1146,12 +1186,22 @@ public class Struct {
         }
 
         public int get() {
-            long signedValue = readBits(bitOffset(), bitSize());
-            return (int) (0xFFFF & signedValue);
+            if (bitSize() == 16) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return (int) (0xFFFF & getByteBuffer().getShort(index));
+            } else { // Else bitfields
+                long signedValue = readBits(bitOffset(), bitSize());
+                return (int) (0xFFFF & signedValue);
+            }
         }
 
         public void set(int value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 16) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().putShort(index, (short) value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1173,11 +1223,21 @@ public class Struct {
         }
 
         public int get() {
-            return (int) readBits(bitOffset(), bitSize());
+            if (bitSize() == 32) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return getByteBuffer().getInt(index);
+            } else { // Else bitfields
+                return (int) readBits(bitOffset(), bitSize());
+            }
         }
 
         public void set(int value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 32) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().putInt(index, value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1199,12 +1259,22 @@ public class Struct {
         }
 
         public long get() {
-            long signedValue = readBits(bitOffset(), bitSize());
-            return 0xFFFFFFFFL & signedValue;
+            if (bitSize() == 32) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return 0xFFFFFFFFL & getByteBuffer().getInt(index);
+            } else { // Else bitfields
+                long signedValue = readBits(bitOffset(), bitSize());
+                return 0xFFFFFFFFL & signedValue;
+            }
         }
 
         public void set(long value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 32) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().putInt(index, (int) value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1226,11 +1296,21 @@ public class Struct {
         }
 
         public long get() {
-            return readBits(bitOffset(), bitSize());
+            if (bitSize() == 64) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                return getByteBuffer().getLong(index);
+            } else { // Else bitfields
+                return readBits(bitOffset(), bitSize());
+            }
         }
 
         public void set(long value) {
-            writeBits(value, bitOffset(), bitSize());
+            if (bitSize() == 64) {
+                int index = (bitOffset() >> 3) + getByteBufferPosition();
+                getByteBuffer().putLong(index, value);
+            } else { // Else bitfields
+                writeBits(value, bitOffset(), bitSize());
+            }
         }
 
         public String toString() {
@@ -1239,7 +1319,8 @@ public class Struct {
     }
 
     /**
-     * This class represents an arbitrary size (unsigned) bit field.
+     * This class represents an arbitrary size (unsigned) bit field with
+     * no alignment constraint. Bit fields may cross words boundaries.
      * BitField values are unsigned but the maximum number of bits is 63
      * to hold in a long value.
      */
