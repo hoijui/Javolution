@@ -212,7 +212,7 @@ public abstract class ObjectFactory/*<T>*/ {
     // Generic implementation using public no-arg constructor (reflection).
     private static class Generic extends ObjectFactory {
 
-        private static final FastMap CLASS_TO_FACTORY = new FastMap().setShared(true);
+        private static final FastMap CLASS_TO_FACTORY = new FastMap().shared();
         private final Class _class;
 
         private Generic(Class cls) {

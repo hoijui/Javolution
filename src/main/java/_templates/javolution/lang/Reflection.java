@@ -512,7 +512,7 @@ public abstract class Reflection {
         /**
          * Holds the name-to-class mapping (cache).
          */
-        private final FastMap _nameToClass = new FastMap().setShared(true).setKeyComparator(FastComparator.LEXICAL);
+        private final FastMap _nameToClass = new FastMap().shared().setKeyComparator(FastComparator.LEXICAL);
 
         // Implements abstract method.
         public void add(Object classLoader) {

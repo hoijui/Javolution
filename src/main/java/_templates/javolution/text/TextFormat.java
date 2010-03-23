@@ -30,10 +30,10 @@ import _templates.javolution.util.FastMap;
  *     public class Complex extends Number {
  * 
  *         // Defines the default format for complex numbers (Cartesian form)
- *         private static TextFormat<Complex> CARTESIAN_FORMAT = new TextFormat<Complex> (Complex.class) { ... }
+ *         protected static TextFormat<Complex> TEXT_FORMAT = new TextFormat<Complex> (Complex.class) { ... }
  *
  *         public static Complex valueOf(CharSequence csq) {
- *             return CARTESIAN_FORMAT.parse(csq);
+ *             return TEXT_FORMAT.parse(csq);
  *         }
  *
  *     }[/code]
@@ -72,7 +72,7 @@ public abstract class TextFormat/*<T>*/ {
     /**
      * Holds the default mapping (class to local references).
      */
-    private static final FastMap CLASS_TO_FORMAT = new FastMap().setShared(true);
+    private static final FastMap CLASS_TO_FORMAT = new FastMap().shared();
 
     /**
      * Defines the static format bound to the specified class.
@@ -91,7 +91,7 @@ public abstract class TextFormat/*<T>*/ {
     }
 
     /**
-     * <p> Returns the most specialized format found compatible with
+     * <p> Returns the most specialized current format found compatible with
      *     the specified class.</p>
      * 
      * <p> A default text format exist for the following predefined types:
@@ -125,7 +125,7 @@ public abstract class TextFormat/*<T>*/ {
             if (format != null)
                 return format;
         }
-        ClassInitializer.initialize(forClass); // Ensures class static initializer are run.
+        ClassInitializer.initialize(forClass); // Ensures class static initializer is run.
         return searchFormat(forClass);
     }
 
@@ -157,6 +157,46 @@ public abstract class TextFormat/*<T>*/ {
             CLASS_TO_FORMAT.put(forClass, ref);
         }
         ref.set(format);
+    }
+
+
+    /**
+     * <p> Returns the most specialized static format (format bound to a class
+     *     at construction) compatible with the specified class.
+     *     Unlike {@link #getInstance} the format returned
+     *     is not affected by users {@link #setInstance overrides}.</p>
+     *
+     * <p> If there is no default format found for the specified type, the
+     *     default format for <code>java.lang.Object</code> is returned
+     *     (formatting only).
+     * </p>
+     *
+     * @param  forClass the class to which the format has to be compatible.
+     * @return the most specialized static format compatible with the specified class
+     *         or if none found the default format for <code>java.lang.Object</code>
+     */
+    public static/*<T>*/ TextFormat/*<T>*/ getDefault(Class/*<? extends T>*/ forClass) {
+       LocalContext.Reference ref = (LocalContext.Reference) CLASS_TO_FORMAT.get(forClass);
+        if (ref != null) {
+            TextFormat format = (TextFormat) ref.getDefault();
+            if (format != null)
+                return format;
+        }
+        ClassInitializer.initialize(forClass); // Ensures class static initializer is run.
+        return searchDefault(forClass);
+    }
+
+    private static TextFormat searchDefault(Class forClass) {
+        LocalContext.Reference ref = (LocalContext.Reference) CLASS_TO_FORMAT.get(forClass);
+        if (ref != null) {
+            TextFormat format = (TextFormat) ref.getDefault();
+            if (format != null)
+                return format;
+        }
+
+        // Recursion with the parent class.
+        Class parentClass = Reflection.getInstance().getSuperclass(forClass);
+        return parentClass == null ? OBJECT_FORMAT : searchDefault(parentClass);
     }
 
     /**

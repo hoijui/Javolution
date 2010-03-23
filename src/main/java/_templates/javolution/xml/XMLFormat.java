@@ -136,7 +136,7 @@ public abstract class XMLFormat/*<T>*/ {
     /**
      * Holds the class instances.
      */
-    private static final FastMap CLASS_TO_FORMAT = new FastMap().setShared(true);
+    private static final FastMap CLASS_TO_FORMAT = new FastMap().shared();
 
     /**
      * Holds the class associated to this format (static instances)

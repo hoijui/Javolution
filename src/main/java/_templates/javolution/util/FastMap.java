@@ -37,13 +37,13 @@ import _templates.javolution.xml.XMLSerializable;
 /**
  * <p> This class represents a hash map with real-time behavior; 
  *     smooth capacity increase and <i>thread-safe</i> without external 
- *     synchronization when {@link #isShared shared}.</p>
+ *     synchronization when {@link #shared shared}.</p>
  *     <img src="doc-files/map-put.png"/>
  *     
  * <p> {@link FastMap} has a predictable iteration order, which is the order in
  *     which keys are inserted into the map (similar to 
  *     <code>java.util.LinkedHashMap</code> collection class). If the map is 
- *     marked {@link #setShared(boolean) shared} then all operations are 
+ *     marked {@link #shared shared} then all operations are
  *     thread-safe including iterations over the map's collections. 
  *     Unlike <code>ConcurrentHashMap</code>, {@link #get(Object) access} never
  *     blocks; retrieval reflects the map state not older than the last time the
@@ -54,9 +54,9 @@ import _templates.javolution.xml.XMLSerializable;
  *     (and quickly) until the next synchronization point. In some cases the
  *     "happen before" guarantee is necessary (e.g. to ensure unicity) and
  *     threads have to be synchronized explicitly. Whenever possible such
- *     synchronization should be performed on the key object itself and the 
+ *     synchronization should be performed on the key object itself and 
  *     not the whole map. For example:[code]
- *     FastMap<Index, Object> sparseVector = new FastMap<Index, Object>().setShared(true)
+ *     FastMap<Index, Object> sparseVector = new FastMap<Index, Object>().shared()
  *     ... // Put
  *     synchronized(index) { // javolution.util.Index instances are unique.
  *         sparseVector.put(index, value);
@@ -102,14 +102,14 @@ import _templates.javolution.xml.XMLSerializable;
  *     is shared in which case the removed entry is candidate for garbage 
  *     collection as it cannot be safely recycled).</p>
  *     
- * <p> Shared maps do not use internal synchronization, except in case of 
+ * <p> {@link #shared() Shared} maps do not use internal synchronization, except in case of
  *     concurrent modifications of the map structure (entry added/deleted).
  *     Reads and iterations are never synchronized and never blocking.
  *     With regards to the memory model, shared maps are equivalent to shared 
- *     non-volatile variables (no "happen before" guarantee). There are
- *     typically used as lookup tables. For example:[code]
+ *     non-volatile variables (no "happen before" guarantee). They can be used 
+ *     as very efficient lookup tables. For example:[code]
  *     public class Unit {
- *         static FastMap<Unit, String> labels = new FastMap().setShared(true); 
+ *         static FastMap<Unit, String> labels = new FastMap().shared();
  *         ...
  *         public String toString() {
  *             String label = labels.get(this); // No synchronization.
@@ -119,7 +119,7 @@ import _templates.javolution.xml.XMLSerializable;
  *            
  * <p> <b>Implementation Note:</b> To maintain time-determinism, rehash/resize
  *     is performed only when the map's size is small (see chart). For large 
- *     maps (size > 512), the collection is divided recursively into (64) 
+ *     maps (size > 512), the map is divided recursively into (64)
  *     smaller sub-maps. The cost of the dispatching (based upon hashcode 
  *     value) has been measured to be at most 20% of the access time 
  *     (and most often way less).</p>
@@ -792,9 +792,15 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
      *     systems synchronizing ensures that the CPU internal cache is not 
      *     stale).</p>
      * 
-     * @param isShared <code>true</code> if this map is shared and thread-safe;
-     *        <code>false</code> otherwise.
      * @return <code>this</code>
+     */
+    public FastMap/*<K,V>*/ shared() {
+        _isShared = true;
+        return this;
+    }
+
+    /**
+     * @deprecated Replaced by {@link #shared}
      */
     public FastMap/*<K,V>*/ setShared(boolean isShared) {
         _isShared = isShared;
@@ -1503,7 +1509,7 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
 
     // Implements Reusable.
     public void reset() {
-        setShared(false); // A shared map can only be reset if no thread use it.
+        _isShared = false; // A shared map can only be reset if no thread use it.
         clear(); // In which case, it is safe to recycle the entries.
         setKeyComparator(FastComparator.DEFAULT);
         setValueComparator(FastComparator.DEFAULT);
@@ -1521,7 +1527,7 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
             ClassNotFoundException {
         setKeyComparator((FastComparator) stream.readObject());
         setValueComparator((FastComparator) stream.readObject());
-        setShared(stream.readBoolean());
+        _isShared = stream.readBoolean();
         final int size = stream.readInt();
         setup(size);
         for (int i = 0; i < size; i++) {

@@ -50,7 +50,7 @@ public final class LocalMap/*<K,V>*/implements Map/*<K,V>*/{
      * Holds the fast map reference (shared map).
      */
     private final LocalContext.Reference _mapRef 
-        = new LocalContext.Reference(new FastMap().setShared(true));
+        = new LocalContext.Reference(new FastMap().shared());
 
     /**
      * Default constructor.
@@ -261,7 +261,7 @@ public final class LocalMap/*<K,V>*/implements Map/*<K,V>*/{
     private FastMap newLocalMap() {
         FastMap parentMap = (FastMap) _mapRef.get();
         FastMap localMap = FastMap.newInstance(); 
-        localMap.setShared(true);
+        localMap.shared();
         localMap.setKeyComparator(parentMap.getKeyComparator());
         localMap.setValueComparator(parentMap.getValueComparator());
         localMap.putAll(parentMap);
