@@ -45,31 +45,36 @@ import _templates.javolution.text.TextBuilder;
  * <p> Because of its one-to-one mapping, it is relatively easy to convert C
  *     header files (e.g. OpenGL bindings) to Java {@link Struct}/{@link Union}
  *     using simple text macros. Here is an example of C struct:<code><pre>
+ *     enum Gender{MALE, FEMALE};
  *     struct Date {
  *         unsigned short year;
  *         unsigned byte month;
  *         unsigned byte day;
  *     };
  *     struct Student {
+ *         enum Gender gender;
  *         char        name[64];
  *         struct Date birth;
  *         float       grades[10];
  *         Student*    next;
  *     };</pre></code>
  *     and here is the Java equivalent using this class:[code]
+ *     public enum Gender { MALE, FEMALE };
  *     public static class Date extends Struct {
  *         public final Unsigned16 year = new Unsigned16();
  *         public final Unsigned8 month = new Unsigned8();
  *         public final Unsigned8 day   = new Unsigned8();
  *     }
  *     public static class Student extends Struct {
- *         public final UTF8String  name   = new UTF8String(64);
- *         public final Date        birth  = inner(new Date());
- *         public final Float32[]   grades = array(new Float32[10]);
- *         public final Reference32<Student> next =  new Reference32<Student>();
+ *         public final Enum32<Gender>       gender = new Enum32<Gender>(Gender.values());
+ *         public final UTF8String           name   = new UTF8String(64);
+ *         public final Date                 birth  = inner(new Date());
+ *         public final Float32[]            grades = array(new Float32[10]);
+ *         public final Reference32<Student> next   =  new Reference32<Student>();
  *     }[/code]
  *     Struct's members are directly accessible:[code]
  *     Student student = new Student();
+ *     student.gender.set(Gender.MALE);
  *     student.name.set("John Doe"); // Null terminated (C compatible)
  *     int age = 2003 - student.birth.year.get();
  *     student.grades[2].set(12.5f);
@@ -133,7 +138,7 @@ import _templates.javolution.text.TextBuilder;
  *             Java NIO package are directly applicable to Struct/Union.</i></p>
  *
  * @author  <a href="mailto:jean-marie@dautelle.com">Jean-Marie Dautelle</a>
- * @version 5.4, November 2, 2009
+ * @version 5.4.5, March 24, 2009
  */
 public class Struct {
 
@@ -784,7 +789,8 @@ public class Struct {
     }
 
     /**
-     * Reads the specified bits from this Struct as an integer value.
+     * Reads the specified bits from this Struct as an long (signed) integer
+     * value.
      *
      * @param  bitOffset the bit start position in the Struct.
      * @param  bitSize the number of bits.
@@ -1118,7 +1124,7 @@ public class Struct {
                 return (short) (0xFF & getByteBuffer().get(index));
             } else { // Else bitfields
                 long signedValue = readBits(bitOffset(), bitSize());
-                return (short) (0xFF & signedValue);
+                return (short) (~(-1 << bitSize()) & signedValue);
             }
         }
 
@@ -1191,7 +1197,7 @@ public class Struct {
                 return (int) (0xFFFF & getByteBuffer().getShort(index));
             } else { // Else bitfields
                 long signedValue = readBits(bitOffset(), bitSize());
-                return (int) (0xFFFF & signedValue);
+                return (int) (~(-1 << bitSize()) & signedValue);
             }
         }
 
@@ -1264,7 +1270,7 @@ public class Struct {
                 return 0xFFFFFFFFL & getByteBuffer().getInt(index);
             } else { // Else bitfields
                 long signedValue = readBits(bitOffset(), bitSize());
-                return 0xFFFFFFFFL & signedValue;
+                return ~(-1L << bitSize()) & signedValue;
             }
         }
 
@@ -1336,7 +1342,7 @@ public class Struct {
 
         public long longValue() {
             long signedValue = readBits(bitOffset(), bitSize());
-            return (-1L >>> (64 - bitSize())) & signedValue;
+            return ~(-1L << bitSize()) & signedValue;
         }
 
         public int intValue() {
@@ -1505,29 +1511,29 @@ public class Struct {
     /**
      * This class represents a 8 bits {@link Enum}.
      */
-    public class Enum8 extends Member {
+    public class Enum8/*<T extends Enum>*/ extends Member {
 
-        private final List _enumValues;
+        private final Enum/*T*/ [] _values;
 
-        public Enum8(List enumValues) {
+        public Enum8(Enum/*T*/ [] values) {
             super(1, 8);
-            _enumValues = enumValues;
+            _values = values;
         }
 
-        public Enum8(List enumValues, int nbrOfBits) {
+        public Enum8(Enum/*T*/ [] values, int nbrOfBits) {
             super(0, nbrOfBits);
-            _enumValues = enumValues;
+            _values = values;
         }
 
-        public Enum get() {
+        public Enum/*T*/ get() {
             long signedValue = readBits(bitOffset(), bitSize());
-            int index = (int) ((-1L >>> (64 - bitSize())) & signedValue);
-            return (Enum) _enumValues.get(index);
+            int index = (int) (~(-1 << bitSize()) & signedValue);
+            return _values[index];
         }
 
-        public void set(Enum e) {
+        public void set( Enum/*T*/ e) {
             int index = e.ordinal();
-            if (_enumValues.get(index) != e)
+            if (_values[index] != e)
                 throw new IllegalArgumentException(
                         "enum: " + e + ", ordinal value does not reflect enum values position");
             writeBits(index, bitOffset(), bitSize());
@@ -1541,29 +1547,29 @@ public class Struct {
     /**
      * This class represents a 16 bits {@link Enum}.
      */
-    public class Enum16 extends Member {
+    public class Enum16/*<T extends Enum>*/ extends Member {
 
-        private final List _enumValues;
+        private final Enum/*T*/ [] _values;
 
-        public Enum16(List enumValues) {
-            super(1, 16);
-            _enumValues = enumValues;
+        public Enum16(Enum/*T*/ [] values) {
+            super(2, 16);
+            _values = values;
         }
 
-        public Enum16(List enumValues, int nbrOfBits) {
+        public Enum16(Enum/*T*/ [] values, int nbrOfBits) {
             super(0, nbrOfBits);
-            _enumValues = enumValues;
+            _values = values;
         }
 
-        public Enum get() {
+        public Enum/*T*/ get() {
             long signedValue = readBits(bitOffset(), bitSize());
-            int index = (int) ((-1L >>> (64 - bitSize())) & signedValue);
-            return (Enum) _enumValues.get(index);
+            int index = (int) (~(-1 << bitSize()) & signedValue);
+            return _values[index];
         }
 
-        public void set(Enum e) {
+        public void set( Enum/*T*/ e) {
             int index = e.ordinal();
-            if (_enumValues.get(index) != e)
+            if (_values[index] != e)
                 throw new IllegalArgumentException(
                         "enum: " + e + ", ordinal value does not reflect enum values position");
             writeBits(index, bitOffset(), bitSize());
@@ -1577,29 +1583,29 @@ public class Struct {
     /**
      * This class represents a 32 bits {@link Enum}.
      */
-    public class Enum32 extends Member {
+    public class Enum32/*<T extends Enum>*/ extends Member {
 
-        private final List _enumValues;
+        private final Enum/*T*/ [] _values;
 
-        public Enum32(List enumValues) {
-            super(1, 32);
-            _enumValues = enumValues;
+        public Enum32(Enum/*T*/ [] values) {
+            super(4, 32);
+            _values = values;
         }
 
-        public Enum32(List enumValues, int nbrOfBits) {
+        public Enum32(Enum/*T*/ [] values, int nbrOfBits) {
             super(0, nbrOfBits);
-            _enumValues = enumValues;
+            _values = values;
         }
 
-        public Enum get() {
+        public Enum/*T*/ get() {
             long signedValue = readBits(bitOffset(), bitSize());
-            int index = (int) ((-1L >>> (64 - bitSize())) & signedValue);
-            return (Enum) _enumValues.get(index);
+            int index = (int) (~(-1L << bitSize()) & signedValue);
+            return _values[index];
         }
 
-        public void set(Enum e) {
+        public void set( Enum/*T*/ e) {
             int index = e.ordinal();
-            if (_enumValues.get(index) != e)
+            if (_values[index] != e)
                 throw new IllegalArgumentException(
                         "enum: " + e + ", ordinal value does not reflect enum values position");
             writeBits(index, bitOffset(), bitSize());
@@ -1609,33 +1615,34 @@ public class Struct {
             return String.valueOf(this.get());
         }
     }
-
+    
     /**
      * This class represents a 64 bits {@link Enum}.
      */
-    public class Enum64 extends Member {
+    public class Enum64/*<T extends Enum>*/ extends Member {
 
-        private final List _enumValues;
+        private final Enum/*T*/ [] _values;
 
-        public Enum64(List enumValues) {
-            super(1, 64);
-            _enumValues = enumValues;
+        public Enum64(Enum/*T*/ [] values) {
+            super(8, 64);
+            _values = values;
         }
 
-        public Enum64(List enumValues, int nbrOfBits) {
+        public Enum64(Enum/*T*/ [] values, int nbrOfBits) {
             super(0, nbrOfBits);
-            _enumValues = enumValues;
+            _values = values;
         }
 
-        public Enum get() {
+        public Enum/*T*/ get() {
             long signedValue = readBits(bitOffset(), bitSize());
-            int index = (int) ((-1L >>> (64 - bitSize())) & signedValue);
-            return (Enum) _enumValues.get(index);
+            int index = (bitSize() == 64) ? (int) signedValue : 
+                (int) (~(-1L << bitSize()) & signedValue);
+            return _values[index];
         }
 
-        public void set(Enum e) {
+        public void set( Enum/*T*/ e) {
             int index = e.ordinal();
-            if (_enumValues.get(index) != e)
+            if (_values[index] != e)
                 throw new IllegalArgumentException(
                         "enum: " + e + ", ordinal value does not reflect enum values position");
             writeBits(index, bitOffset(), bitSize());

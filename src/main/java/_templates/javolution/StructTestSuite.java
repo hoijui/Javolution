@@ -24,21 +24,12 @@ import _templates.javolution.text.Text;
  */
 public final class StructTestSuite extends TestSuite {
 
-    private static final List/*<TestEnum>*/ enums = new ArrayList/*<TestEnum>*/();
-
     /** @JVM-1.5+@
-    static {
-    enums.add(TestEnum.A);
-    enums.add(TestEnum.B);
-    enums.add(TestEnum.C);
-    enums.add(TestEnum.D);
-    }
-
     enum TestEnum {
-    A,
+    D,
     B,
+    A,
     C,
-    D
     }
     /**/
     public StructTestSuite() {
@@ -112,7 +103,7 @@ public final class StructTestSuite extends TestSuite {
     }
 
     private static class TestStruct extends BaseTestStruct {
-    final Enum8 enum8 = new Enum8(enums);
+    final Enum8 enum8 = new Enum8(TestEnum.values());
 
     private TestStruct(ByteOrder order) {
     super(order);
@@ -137,7 +128,7 @@ public final class StructTestSuite extends TestSuite {
     }
 
     private static class TestStruct extends BaseTestStruct {
-    final Enum16 enum16 = new Enum16(enums);
+    final Enum16 enum16 = new Enum16(TestEnum.values());
 
     private TestStruct(ByteOrder order) {
     super(order);
@@ -162,7 +153,7 @@ public final class StructTestSuite extends TestSuite {
     }
 
     private static class TestStruct extends BaseTestStruct {
-    final Enum32 enum32 = new Enum32(enums);
+    final Enum32 enum32 = new Enum32(TestEnum.values());
 
     private TestStruct(ByteOrder order) {
     super(order);
@@ -187,7 +178,7 @@ public final class StructTestSuite extends TestSuite {
     }
 
     private static class TestStruct extends BaseTestStruct {
-    final Enum64 enum64 = new Enum64(enums);
+    final Enum64 enum64 = new Enum64(TestEnum.values());
 
     private TestStruct(ByteOrder order) {
     super(order);
