@@ -102,7 +102,7 @@ public abstract class TestContext extends LogContext {
      *         context.
      */
     public static void run(TestSuite testSuite) throws Exception {
-        TestContext testContext = (TestContext) LogContext.getCurrent();
+        TestContext testContext = (TestContext) LogContext.getCurrentLogContext();
         testContext.doRun(testSuite);        
     }
 
@@ -115,7 +115,7 @@ public abstract class TestContext extends LogContext {
      *         context.
      */
     public static void run(TestCase testCase) throws Exception {
-        TestContext testContext = (TestContext) LogContext.getCurrent();
+        TestContext testContext = (TestContext) LogContext.getCurrentLogContext();
         testContext.doRun(testCase);
     }
 
@@ -133,7 +133,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = ((expected == null) && (actual == null)) || ((expected != null) && (expected.equals(actual)));
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected).plus(" expected but found ").plus(actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -160,7 +160,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (expected == actual);
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected).plus(" expected but found a different instance ").plus(actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -257,7 +257,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (actual != null);
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf("Not null expected but found null");
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -286,7 +286,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (expected == actual);
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected + " expected but found " + actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -317,7 +317,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (expected == actual);
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected + " expected but found " + actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -350,7 +350,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (expected == actual) || (Double.isNaN(expected) && Double.isNaN(actual));
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected + " expected but found " + actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -386,7 +386,7 @@ public abstract class TestContext extends LogContext {
         boolean ok = (expected == actual) || (Double.isNaN(expected) && Double.isNaN(actual));
         message = (ok || (message != null)) ? message : // Provides error message if necessary.
                 Text.valueOf(expected + " expected but found " + actual);
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         return ctx.doAssert(ok, message);
     }
 
@@ -418,7 +418,7 @@ public abstract class TestContext extends LogContext {
      */
     public static boolean assertArrayEquals(Object[] expected,
             Object[] actual, CharSequence message) {
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (expected == actual)
             return ctx.doAssert(true, message);
         if (expected == null)
@@ -460,7 +460,7 @@ public abstract class TestContext extends LogContext {
      */
     public static boolean assertArrayEquals(boolean[] expected,
             boolean[] actual, CharSequence message) {
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (expected == actual)
             return ctx.doAssert(true, message);
         if (expected == null)
@@ -502,7 +502,7 @@ public abstract class TestContext extends LogContext {
      */
     public static boolean assertArrayEquals(int[] expected,
             int[] actual, CharSequence message) {
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (expected == actual)
             return ctx.doAssert(true, message);
         if (expected == null)
@@ -544,7 +544,7 @@ public abstract class TestContext extends LogContext {
      */
     public static boolean assertArrayEquals(long[] expected,
             long[] actual, CharSequence message) {
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (expected == actual)
             return ctx.doAssert(true, message);
         if (expected == null)
@@ -588,7 +588,7 @@ public abstract class TestContext extends LogContext {
      */
     public static boolean assertArrayEquals(double[] expected,
             double[] actual, double delta, CharSequence message) {
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (expected == actual)
             return ctx.doAssert(true, message);
         if (expected == null)
@@ -638,7 +638,7 @@ public abstract class TestContext extends LogContext {
         } catch (Throwable e) {
             exception = e;
         }
-        TestContext ctx = (TestContext) LogContext.getCurrent();
+        TestContext ctx = (TestContext) LogContext.getCurrentLogContext();
         if (exception == null)
             return ctx.doAssert(false, message != null ? message : Text.valueOf("Expected exception instance of ").plus(exceptionClass.getName()).plus(" but no exception has been raised"));
         boolean ok = exceptionClass.isInstance(exception);

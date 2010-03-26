@@ -267,7 +267,7 @@ public abstract class ConcurrentContext extends Context {
      *         {@link ConcurrentContext}.
      */
     public static void execute(Runnable logic) {
-        ConcurrentContext ctx = (ConcurrentContext) Context.getCurrent();
+        ConcurrentContext ctx = (ConcurrentContext) Context.getCurrentContext();
         ctx.executeAction(logic);
     }
 
@@ -288,7 +288,7 @@ public abstract class ConcurrentContext extends Context {
      *@JVM-1.5+@
     public static void execute(Runnable... logics) {
      ConcurrentContext.enter();
-     ConcurrentContext ctx = (ConcurrentContext) ConcurrentContext.getCurrent();
+     ConcurrentContext ctx = (ConcurrentContext) ConcurrentContext.getCurrentContext();
     try {
     for (int i=0; i < logics.length; i++) {
     ctx.executeAction(logics[i]);
@@ -387,7 +387,7 @@ public abstract class ConcurrentContext extends Context {
 
         // Called when a concurrent execution starts.
         void started() {
-            Context.setCurrent(this);
+            Context.setConcurrentContext(this);
         }
 
         // Called when a concurrent execution finishes. 
@@ -396,7 +396,7 @@ public abstract class ConcurrentContext extends Context {
                 _completed++;
                 this.notify();
             }
-            ((AllocatorContext) AllocatorContext.getCurrent()).deactivate();
+            ((AllocatorContext) AllocatorContext.getCurrentContext()).deactivate();
         }
 
         // Called when an error occurs.

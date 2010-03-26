@@ -122,7 +122,7 @@ import java.util.Enumeration;
  *      [/code]</p>
  *      
  *  <p> Here is an example of reconfiguration from a xml file:[code]
- *      FileInputStream xml = new FileInputStream("configuration.xml");
+ *      FileInputStream xml = new FileInputStream("D:/configuration.xml");
  *      Configurable.read(xml);[/code]
  *      and the configuration file:[code]
  *      <?xml version="1.0" encoding="UTF-8" ?>
@@ -134,7 +134,7 @@ import java.util.Enumeration;
  *               <Value class="java.lang.Integer" value="0"/>
  *          </Configurable>
  *          <Configurable name="javolution.xml.stream.XMLInputFactory#CLASS">
- *               <Value class="java.lang.Class" name="com.foo.MyXMLInputFactory"/>
+ *               <Value class="java.lang.Class" value="com.foo.MyXMLInputFactory"/>
  *          </Configurable>
  *      </Configuration>[/code]</p>
  *       
@@ -286,7 +286,7 @@ public abstract class Configurable/*<T>*/ {
             Object/*{T}*/ newValue) throws SecurityException {
         if (newValue == null)
             throw new IllegalArgumentException("Default value cannot be null");
-        SecurityContext policy = (SecurityContext) SecurityContext.getCurrent();
+        SecurityContext policy = (SecurityContext) SecurityContext.getCurrentSecurityContext();
         if (!policy.isConfigurable(cfg))
             throw new SecurityException(
                     "Configuration disallowed by SecurityContext");
@@ -357,9 +357,13 @@ public abstract class Configurable/*<T>*/ {
      *          <Value class="java.lang.Integer" value="0"/>
      *     </Configurable>
      *     <Configurable name="javolution.xml.stream.XMLInputFactory#CLASS">
-     *          <Value class="java.lang.Class" name="com.foo.MyXMLInputFactory"/>
+     *          <Value class="java.lang.Class" value="com.foo.MyXMLInputFactory"/>
      *     </Configurable>
      * </Configuration>[/code]
+     * It can be read directly with the following code:[code]
+     * FileInputStream xml = new FileInputStream("D:/configuration.xml");
+     * Configurable.read(xml);[/code]
+     *
      *
      * <p><b>Note:</b> OSGI based framework should ensure that class loaders
      *    of configurable instances are known to the {@link Reflection} utility.
@@ -379,4 +383,39 @@ public abstract class Configurable/*<T>*/ {
             LogContext.error(ex);
         }
     }
+
+    /**
+     * Holds the default XML representation of a configurable. Because
+     * configurable instances are unique. Deserialisation of a configurable
+     * returns this unique instance (typically public static) and configure
+     * its value accordingly. The default XML representation consists of
+     * the name of the configurable as an attribute and its optional new value
+     * as a nested element. For example:[code]
+     *   <javolution.lang.Configurable name="javolution.context.ConcurrentContext#MAXIMUM_CONCURRENCY" />
+     *      <Value class="java.lang.Integer" value="0"/>
+     *   </javolution.lang.Configurable>
+     * [/code]
+     * XML configuration files can be read directly using the
+     * {@link #read(java.io.InputStream)} utility method.
+     */
+    static final XMLFormat CONFIGURABLE_XML = new XMLFormat(Configurable.class) {
+
+        public Object newInstance(Class cls, InputElement xml) throws XMLStreamException {
+            return Configurable.getInstance(xml.getAttribute("name", ""));
+        }
+
+        public void write(Object c, OutputElement xml) throws XMLStreamException {
+            Configurable cfg = (Configurable) c;
+            xml.setAttribute("name", cfg.getName());
+            xml.add(cfg.get(), "Value");
+        }
+
+        public void read(InputElement xml, Object c) throws XMLStreamException {
+            Object value = xml.get("Value");
+            if (value == null)
+                return; // Optional value not present.
+            Configurable.configure((Configurable) c, value);
+        }
+    };
+
 }

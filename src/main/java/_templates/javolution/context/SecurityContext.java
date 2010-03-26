@@ -95,8 +95,8 @@ public abstract class SecurityContext extends Context {
      *
      * @return the current security context.
      */
-    public static/*SecurityContext*/ Context getCurrent() {
-        for (Context ctx = Context.getCurrent(); ctx != null; ctx = ctx.getOuter()) {
+    public static SecurityContext  getCurrentSecurityContext() {
+        for (Context ctx = Context.getCurrentContext(); ctx != null; ctx = ctx.getOuter()) {
             if (ctx instanceof SecurityContext)
                 return (SecurityContext) ctx;
         }

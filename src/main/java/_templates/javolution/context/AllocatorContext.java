@@ -27,7 +27,7 @@ import _templates.javolution.lang.ValueType;
  *     defined policy such as aging pools (where
  *     objects sufficiently old are recycled), switchable spaces (objects from
  *     recycled when buffers are swapped), etc.</p>
- *     
+ *
  * @author  <a href="mailto:jean-marie@dautelle.com">Jean-Marie Dautelle</a>
  * @version 5.2, August 19, 2007
  */
@@ -68,8 +68,8 @@ public abstract class AllocatorContext extends Context {
      *
      * @return the current allocator context.
      */
-    public static/*AllocatorContext*/ Context getCurrent() {
-        return Context.getCurrent().getAllocatorContext();
+    public static AllocatorContext getCurrentAllocatorContext() {
+        return Context.getCurrentContext().getAllocatorContext();
     }
 
     /**

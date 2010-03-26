@@ -55,21 +55,6 @@ public final class Index extends Number implements
         Comparable/*<Index>*/, Record, Realtime, Immutable, XMLSerializable  {
 
     /**
-     * Holds the default text format.
-     */
-    static final TextFormat TEXT_FORMAT = new TextFormat(Index.class) {
-
-        public Appendable format(Object obj, Appendable dest)
-                throws IOException {
-            return TypeFormat.format(((Index) obj).intValue(), dest);
-        }
-
-        public Object parse(CharSequence csq, Cursor cursor) {
-            return Index.valueOf(TypeFormat.parseInt(csq, 10, cursor));
-        }
-    };
-
-    /**
      * Holds the index zero (value <code>0</code>).
      */
     public static final Index ZERO = new Index(0);
@@ -360,6 +345,21 @@ public final class Index extends Number implements
     public Text toText() {
         return TextFormat.getInstance(Index.class).format(this);
     }
+
+   /**
+     * Holds the default text format.
+     */
+    static final TextFormat TEXT_FORMAT = new TextFormat(Index.class) {
+
+        public Appendable format(Object obj, Appendable dest)
+                throws IOException {
+            return TypeFormat.format(((Index) obj).intValue(), dest);
+        }
+
+        public Object parse(CharSequence csq, Cursor cursor) {
+            return Index.valueOf(TypeFormat.parseInt(csq, 10, cursor));
+        }
+    };
 
     private static final long serialVersionUID = 1L;
 

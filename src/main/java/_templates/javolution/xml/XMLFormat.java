@@ -1094,7 +1094,7 @@ public abstract class XMLFormat/*<T>*/ {
      * The XML representation consists of the text representation of the object
      * as a "value" attribute.
      */
-    static final XMLFormat/*<Object>*/OBJECT_XML = new XMLFormat(Object.class) {
+    static final XMLFormat OBJECT_XML = new XMLFormat(Object.class) {
       public boolean isReferenceable() {
             return false; // Always by value (immutable).
         }
@@ -1102,11 +1102,11 @@ public abstract class XMLFormat/*<T>*/ {
         public Object newInstance(Class cls,
                 _templates.javolution.xml.XMLFormat.InputElement xml)
                 throws XMLStreamException {
-            CharArray value = xml.getAttribute("value");
-            if (value == null) throw new XMLStreamException("value attribute missing");
             TextFormat format = TextFormat.getInstance(cls);
             if (!format.isParsingSupported())
-                throw new XMLStreamException("No text format with parsing supported for instances of " + cls);
+                throw new XMLStreamException("No XMLFormat or TextFormat (with parsing supported) for instances of " + cls);
+            CharArray value = xml.getAttribute("value");
+            if (value == null) throw new XMLStreamException("Missing value attribute (to be able to parse the instance of " + cls + ")");
             return format.parse(value);
         }
 
@@ -1134,7 +1134,7 @@ public abstract class XMLFormat/*<T>*/ {
      * the collection iterator order. Collections are deserialized using their
      * default constructor.
      */
-    static final XMLFormat/*<Collection>*/COLLECTION_XML = new XMLFormat(
+    static final XMLFormat COLLECTION_XML = new XMLFormat(
             _templates.java.util.Collection.class) {
 
         public void read(InputElement xml, Object obj)
@@ -1170,7 +1170,7 @@ public abstract class XMLFormat/*<T>*/ {
      * The elements' order is defined by the map's entries iterator order.
      * Maps are deserialized using their default constructor.
      */
-    static final XMLFormat/*<Map>*/MAP_XML = new XMLFormat(_templates.java.util.Map.class) {
+    static final XMLFormat MAP_XML = new XMLFormat(_templates.java.util.Map.class) {
 
         public void read(InputElement xml, Object obj)
                 throws XMLStreamException {

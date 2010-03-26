@@ -10,11 +10,14 @@ package _templates.javolution.lang;
 
 import _templates.java.lang.CharSequence;
 import _templates.java.util.Iterator;
+import _templates.javolution.context.LogContext;
 import _templates.javolution.context.ObjectFactory;
 import _templates.javolution.text.TextBuilder;
 import _templates.javolution.util.FastComparator;
 import _templates.javolution.util.FastMap;
 import _templates.javolution.util.FastSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p> This utility class greatly facilitates the use of reflection to invoke 
@@ -74,14 +77,24 @@ public abstract class Reflection {
     private static volatile Reflection INSTANCE = new Default();
 
     /**
-     * Holds the XMLOutputFactory default implementation (configurable).
+     * Holds the default implementation (configurable).
      */
-    public static final Configurable/*<Class<? extends Reflection>>*/CLASS
-        = new Configurable(Default.class) {
-           protected void notifyChange(Object oldValue, Object newValue) {
-                 INSTANCE = (Reflection) ObjectFactory.getInstance((Class) newValue).object();
-          }
+    public static final Configurable/*<Class<? extends Reflection>>*/ CLASS = new Configurable(Default.class) {
+
+        protected void notifyChange(Object oldValue, Object newValue) {
+            try {
+                INSTANCE = (Reflection) ((Class) newValue).newInstance();
+            } catch (Throwable error) {
+                LogContext.error(error);
+            }
+        }
     };
+
+    /**
+     * Default constructor.
+     */
+    protected Reflection() {
+    }
 
     /**
      * Returns the current reflection instance. The implementation class
@@ -538,12 +551,12 @@ public abstract class Reflection {
             } catch (ClassNotFoundException e1) {
                 /* @JVM-1.4+@
                 for (Iterator i = _classLoaders.iterator(); i.hasNext();) {
-                    ClassLoader classLoader = (ClassLoader) i.next();
-                    try {
-                        cls = Class.forName(name, true, classLoader);
-                    } catch (ClassNotFoundException e2) {
-                        // Not found, continue.
-                    }
+                ClassLoader classLoader = (ClassLoader) i.next();
+                try {
+                cls = Class.forName(name, true, classLoader);
+                } catch (ClassNotFoundException e2) {
+                // Not found, continue.
+                }
                 }
                 /**/
             }
@@ -585,17 +598,17 @@ public abstract class Reflection {
         }
 
         public Class[] getInterfaces(Class cls) {
-        /*@JVM-1.4+@
-        if (true) return cls.getInterfaces();
-        /**/
-        return new Class[0];
+            /*@JVM-1.4+@
+            if (true) return cls.getInterfaces();
+            /**/
+            return new Class[0];
         }
 
         public Class getSuperclass(Class cls) {
-        /*@JVM-1.4+@
-        if (true) return cls.getSuperclass();
-        /**/
-        return null;
+            /*@JVM-1.4+@
+            if (true) return cls.getSuperclass();
+            /**/
+            return null;
         }
 
         private class DefaultConstructor extends Constructor {
@@ -822,13 +835,13 @@ public abstract class Reflection {
      * @deprecated To be replaced by <code>Reflection.getInstance().getConstructor(signature)
      */
     public static Constructor getConstructor(Object signature) {
-        return Reflection.getInstance().getConstructor((String)signature);
+        return Reflection.getInstance().getConstructor((String) signature);
     }
 
     /**
      * @deprecated To be replaced by <code>Reflection.getInstance().getMethod(signature)
      */
     public static Method getMethod(Object signature) {
-        return Reflection.getInstance().getMethod((String)signature);
+        return Reflection.getInstance().getMethod((String) signature);
     }
 }

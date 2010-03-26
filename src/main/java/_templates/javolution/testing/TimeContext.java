@@ -94,7 +94,7 @@ public abstract class TimeContext extends TestContext {
      * @return the minimum execution time stated in the specified unit.
      */
     public static long getMinimumTime(String unit) {
-        LogContext ctx = (LogContext) LogContext.getCurrent();
+        LogContext ctx = (LogContext) LogContext.getCurrentLogContext();
         if (ctx instanceof TimeContext)
             return TimeContext.picosecondTo(unit, ((TimeContext) ctx).getMinimumTimeInPicoSeconds());
         else
@@ -109,7 +109,7 @@ public abstract class TimeContext extends TestContext {
      * @return the average execution time stated in the specified unit.
      */
     public static long getAverageTime(String unit) {
-        LogContext ctx = (LogContext) LogContext.getCurrent();
+        LogContext ctx = (LogContext) LogContext.getCurrentLogContext();
         if (ctx instanceof TimeContext)
             return TimeContext.picosecondTo(unit, ((TimeContext) ctx).getAverageTimeInPicoSeconds());
         else
@@ -124,7 +124,7 @@ public abstract class TimeContext extends TestContext {
      * @return the maximum execution time stated in the specified unit.
      */
     public static long getMaximumTime(String unit) {
-        LogContext ctx = (LogContext) LogContext.getCurrent();
+        LogContext ctx = (LogContext) LogContext.getCurrentLogContext();
         if (ctx instanceof TimeContext)
             return TimeContext.picosecondTo(unit, ((TimeContext) ctx).getMaximumTimeInPicoSeconds());
         else

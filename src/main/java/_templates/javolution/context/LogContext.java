@@ -145,8 +145,8 @@ public abstract class LogContext extends Context {
      *
      * @return the current logging context.
      */
-    public static/*LogContext*/ Context getCurrent() {
-        for (Context ctx = Context.getCurrent(); ctx != null; ctx = ctx.getOuter()) {
+    public static LogContext getCurrentLogContext() {
+        for (Context ctx = Context.getCurrentContext(); ctx != null; ctx = ctx.getOuter()) {
             if (ctx instanceof LogContext)
                 return (LogContext) ctx;
         }
@@ -169,7 +169,7 @@ public abstract class LogContext extends Context {
      *         <code>false</code> otherwise.
      */
     public static boolean isDebugLogged() {
-        return ((LogContext) LogContext.getCurrent()).isLogged("debug");
+        return ((LogContext) LogContext.getCurrentLogContext()).isLogged("debug");
     }
 
     /**
@@ -179,7 +179,7 @@ public abstract class LogContext extends Context {
      * @see #logDebug(CharSequence)
      */
     public static void debug(CharSequence message) {
-        ((LogContext) LogContext.getCurrent()).logDebug(message);
+        ((LogContext) LogContext.getCurrentLogContext()).logDebug(message);
     }
 
     /**
@@ -189,7 +189,7 @@ public abstract class LogContext extends Context {
      * @param message the message to log.
      */
     public static void debug(Object message) {
-        LogContext logContext = (LogContext) LogContext.getCurrent();
+        LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
         if (!logContext.isLogged("debug"))
             return;
         logContext.logDebug(Text.valueOf(message));
@@ -202,7 +202,7 @@ public abstract class LogContext extends Context {
      * @param messages the messages to log.
     @JVM-1.5+@
     public static void debug(Object... messages) {
-    LogContext logContext = (LogContext) LogContext.getCurrent();
+    LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
     if (!logContext.isLogged("debug"))
     return;
     Text tmp = Text.valueOf(messages[0]);
@@ -219,7 +219,7 @@ public abstract class LogContext extends Context {
      *         <code>false</code> otherwise.
      */
     public static boolean isInfoLogged() {
-        return ((LogContext) LogContext.getCurrent()).isLogged("info");
+        return ((LogContext) LogContext.getCurrentLogContext()).isLogged("info");
     }
 
     /**
@@ -229,7 +229,7 @@ public abstract class LogContext extends Context {
      * @see #logInfo(CharSequence)
      */
     public static void info(CharSequence message) {
-        ((LogContext) LogContext.getCurrent()).logInfo(message);
+        ((LogContext) LogContext.getCurrentLogContext()).logInfo(message);
     }
 
     /**
@@ -239,7 +239,7 @@ public abstract class LogContext extends Context {
      * @param message the message to log.
      */
     public static void info(Object message) {
-        LogContext logContext = (LogContext) LogContext.getCurrent();
+        LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
         if (!logContext.isLogged("info"))
             return;
         logContext.logInfo(Text.valueOf(message));
@@ -252,7 +252,7 @@ public abstract class LogContext extends Context {
      * @param messages the messages to log.
     @JVM-1.5+@
     public static void info(Object... messages) {
-    LogContext logContext = (LogContext) LogContext.getCurrent();
+    LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
     if (!logContext.isLogged("info"))
     return;
     Text tmp = Text.valueOf(messages[0]);
@@ -269,7 +269,7 @@ public abstract class LogContext extends Context {
      *         <code>false</code> otherwise.
      */
     public static boolean isWarningLogged() {
-        return ((LogContext) LogContext.getCurrent()).isLogged("warning");
+        return ((LogContext) LogContext.getCurrentLogContext()).isLogged("warning");
     }
 
     /**
@@ -279,7 +279,7 @@ public abstract class LogContext extends Context {
      * @see #logWarning(CharSequence)
      */
     public static void warning(CharSequence message) {
-        ((LogContext) LogContext.getCurrent()).logWarning(message);
+        ((LogContext) LogContext.getCurrentLogContext()).logWarning(message);
     }
 
     /**
@@ -289,7 +289,7 @@ public abstract class LogContext extends Context {
      * @param message the message to log.
      */
     public static void warning(Object message) {
-        LogContext logContext = (LogContext) LogContext.getCurrent();
+        LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
         if (!logContext.isLogged("warning"))
             return;
         logContext.logWarning(Text.valueOf(message));
@@ -302,7 +302,7 @@ public abstract class LogContext extends Context {
      * @param messages the messages to log.
     @JVM-1.5+@
     public static void warning(Object... messages) {
-    LogContext logContext = (LogContext) LogContext.getCurrent();
+    LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
     if (!logContext.isLogged("warning"))
     return;
     Text tmp = Text.valueOf(messages[0]);
@@ -319,7 +319,7 @@ public abstract class LogContext extends Context {
      *         <code>false</code> otherwise.
      */
     public static boolean isErrorLogged() {
-        return ((LogContext) LogContext.getCurrent()).isLogged("error");
+        return ((LogContext) LogContext.getCurrentLogContext()).isLogged("error");
     }
 
     /**
@@ -328,7 +328,7 @@ public abstract class LogContext extends Context {
      * @param error the error being logged.
      */
     public static void error(Throwable error) {
-        ((LogContext) LogContext.getCurrent()).logError(error, null);
+        ((LogContext) LogContext.getCurrentLogContext()).logError(error, null);
     }
 
     /**
@@ -339,7 +339,7 @@ public abstract class LogContext extends Context {
      * @param message the supplementary message.
      */
     public static void error(Throwable error, CharSequence message) {
-        ((LogContext) LogContext.getCurrent()).logError(error, message);
+        ((LogContext) LogContext.getCurrentLogContext()).logError(error, message);
     }
 
     /**
@@ -350,7 +350,7 @@ public abstract class LogContext extends Context {
      * @param message the supplementary message.
      */
     public static void error(Throwable error, Object message) {
-        LogContext logContext = (LogContext) LogContext.getCurrent();
+        LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
         if (!logContext.isLogged("error"))
             return;
         logContext.logError(error, Text.valueOf(message));
@@ -364,7 +364,7 @@ public abstract class LogContext extends Context {
      * @param messages the supplementary messages.
     @JVM-1.5+@
     public static void error(Throwable error, Object... messages) {
-    LogContext logContext = (LogContext) LogContext.getCurrent();
+    LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
     if (!logContext.isLogged("error"))
     return;
     Text tmp = Text.valueOf(messages[0]);
@@ -381,7 +381,7 @@ public abstract class LogContext extends Context {
      * @param message the error message being logged.
      */
     public static void error(CharSequence message) {
-        ((LogContext) LogContext.getCurrent()).logError(null, message);
+        ((LogContext) LogContext.getCurrentLogContext()).logError(null, message);
     }
 
     /**
@@ -391,7 +391,7 @@ public abstract class LogContext extends Context {
      * @param message the message to log.
      */
     public static void error(Object message) {
-        LogContext logContext = (LogContext) LogContext.getCurrent();
+        LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
         if (!logContext.isLogged("error"))
             return;
         logContext.logError(null, Text.valueOf(message));
@@ -404,7 +404,7 @@ public abstract class LogContext extends Context {
      * @param messages the messages to log.
     @JVM-1.5+@
     public static void error(Object... messages) {
-    LogContext logContext = (LogContext) LogContext.getCurrent();
+    LogContext logContext = (LogContext) LogContext.getCurrentLogContext();
     if (!logContext.isLogged("error"))
     return;
     Text tmp = Text.valueOf(messages[0]);

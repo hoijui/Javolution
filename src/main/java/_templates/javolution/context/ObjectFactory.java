@@ -50,6 +50,11 @@ import _templates.javolution.util.FastMap;
 public abstract class ObjectFactory/*<T>*/ {
 
     /**
+     * Holds class to factory mapping.
+     */
+    private static final FastMap CLASS_TO_FACTORY = new FastMap().shared();
+
+    /**
      * Indicates if the objects products of this factory require
      * {@link #cleanup(Object) cleanup} when recycled.
      */
@@ -83,7 +88,7 @@ public abstract class ObjectFactory/*<T>*/ {
      * @return an object factory producing instances of the specified class.
      */
     public static/*<T>*/ ObjectFactory/*<T>*/ getInstance(Class/*<T>*/ forClass) {
-        ObjectFactory factory = (ObjectFactory) Generic.CLASS_TO_FACTORY.get(forClass);
+        ObjectFactory factory = (ObjectFactory) CLASS_TO_FACTORY.get(forClass);
         return factory != null ? factory : Generic.newInstance(forClass);
     }
 
@@ -97,12 +102,12 @@ public abstract class ObjectFactory/*<T>*/ {
      */
     public static/*<T>*/ void setInstance(ObjectFactory/*<T>*/ factory,
             Class/*<T>*/ forClass) {
-        Generic.CLASS_TO_FACTORY.put(forClass, factory);
+        CLASS_TO_FACTORY.put(forClass, factory);
     }
 
     /**
      * Returns a factory object possibly recycled or preallocated.
-     * This method is equivalent to <code>currentAllocator().nextInQueue()</code>.
+     * This method is equivalent to <code>currentAllocator().next()</code>.
      * 
      * @return a recycled, pre-allocated or new factory object.
      */
@@ -148,7 +153,7 @@ public abstract class ObjectFactory/*<T>*/ {
             return _allocator = allocator;
 
         // Retrieves allocator from current allocator context.
-        allocator = ((AllocatorContext) AllocatorContext.getCurrent()).getAllocator(this);
+        allocator = Context.getCurrentContext().getAllocatorContext().getAllocator(this);
 
         // Sets diverse shortcuts.
         _localAllocator.set(allocator);
@@ -212,7 +217,6 @@ public abstract class ObjectFactory/*<T>*/ {
     // Generic implementation using public no-arg constructor (reflection).
     private static class Generic extends ObjectFactory {
 
-        private static final FastMap CLASS_TO_FACTORY = new FastMap().shared();
         private final Class _class;
 
         private Generic(Class cls) {
