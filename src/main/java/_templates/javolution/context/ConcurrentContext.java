@@ -396,7 +396,7 @@ public abstract class ConcurrentContext extends Context {
                 _completed++;
                 this.notify();
             }
-            ((AllocatorContext) AllocatorContext.getCurrentContext()).deactivate();
+            AllocatorContext.getCurrentAllocatorContext().deactivate();
         }
 
         // Called when an error occurs.

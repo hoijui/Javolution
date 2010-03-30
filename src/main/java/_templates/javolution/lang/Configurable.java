@@ -30,32 +30,32 @@ import java.util.Enumeration;
  *
  *  <p> The response is obviously NO!</p>
  *
- *  <p> Let's compare the following examples:<pre>
+ *  <p> Let's compare the following examples:[code]
  *      class Document {
  *          private static final Font DEFAULT_FONT
  *              = Font.decode(System.getProperty("DEFAULT_FONT") != null ?
  *                  System.getProperty("DEFAULT_FONT") : "Arial-BOLD-18");
  *          ...
- *      }</pre>
- *      With the following (using this class):<pre>
+ *      }[/code]
+ *      With the following (using this class):[code]
  *      class Document {
  *          public static final Configurable<Font> DEFAULT_FONT
  *              = new Configurable<Font>(new Font("Arial", Font.BOLD, 18)) {};
  *          ...
- *      }</pre>
+ *      }[/code]
  *      Not only the second example is cleaner, but the actual configuration
  *      data can come from anywhere, for example from the OSGI Configuration
  *      Admin package (<code>org.osgi.service.cm</code>).
  *      Low level code does not need to know.</p>
  *
  * <p>  Configurable instances have the same textual representation as their
- *      current values. For example:<pre>
+ *      current values. For example:[code]
  *       public static final Configurable<String> AIRPORT_TABLE
  *            = new Configurable<String>("Airports") {};
  *       ...
  *       String sql = "SELECT * FROM " + AIRPORT_TABLE
  *           // AIRPORT_TABLE.get() is superfluous
- *           + " WHERE State = '" + state  + "'";</pre>
+ *           + " WHERE State = '" + state  + "'";[/code]
  *      </p>
  *
  *  <p> Unlike system properties (or any static mapping), configuration
@@ -63,7 +63,7 @@ import java.util.Enumeration;
  *      They may depend upon the current run-time platform,
  *      the number of cpus, etc. Configuration parameters may also be retrieved
  *      from external resources such as databases, XML files,
- *      external servers, system properties, etc.<pre>
+ *      external servers, system properties, etc.[code]
  *      public abstract class FastComparator<T> implements Comparator<T>, Serializable  {
  *          public static final Configurable<Boolean> REHASH_SYSTEM_HASHCODE
  *              = new Configurable<Boolean>(isPoorSystemHash()) {}; // Test system hashcode.
@@ -78,7 +78,7 @@ import java.util.Enumeration;
  *              = new Configurable<Class<? extends XMLInputFactory>>(XMLInputFactory.Default.class) {};
  *                  // Default class implementation is a private class.
  *     ...
- *     </pre></p>
+ *     [/code]</p>
  *
  *  <p> Dynamic {@link #configure configuration} is allowed/disallowed based
  *      upon the current {SecurityContext}. Configurables are automatically
@@ -300,7 +300,7 @@ public abstract class Configurable/*<T>*/ {
 
     /**
      * Convenience method to read the specified properties and reconfigure
-     * accordingly.[code]
+     * accordingly. For example:[code]
      *     // Load configurables from system properties.
      *     Configurable.read(System.getProperties());[/code]
      * Configurables are identified by their field names. The textual
@@ -363,7 +363,6 @@ public abstract class Configurable/*<T>*/ {
      * It can be read directly with the following code:[code]
      * FileInputStream xml = new FileInputStream("D:/configuration.xml");
      * Configurable.read(xml);[/code]
-     *
      *
      * <p><b>Note:</b> OSGI based framework should ensure that class loaders
      *    of configurable instances are known to the {@link Reflection} utility.
