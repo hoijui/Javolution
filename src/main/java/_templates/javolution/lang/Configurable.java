@@ -337,7 +337,7 @@ public abstract class Configurable/*<T>*/ {
     LogContext.error("Cannot find suitable TextFormat to parse instances of " + type);
     continue;
     }
-    Object newValue = format.parse(_templates.javolution.Javolution.j2meToCharSeq(textValue));
+    Object newValue = format.parse(textValue);
     Configurable.configure(cfg, newValue);
     }
     }

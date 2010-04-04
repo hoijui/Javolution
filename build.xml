@@ -7,8 +7,8 @@
     <target name="_init">
         <tstamp />
         <property name="library" value="javolution" />
-        <property name="version" value="5.4" />
-        <property name="release" value="5" />
+        <property name="version" value="5.5" />
+        <property name="release" value="0" />
         <property name="jarpath" value="target/${library}-${version}.${release}" />
         <property name="javaGenerated" value="target/generated-sources/java" />
         <property name="javaSource" value="src/main/java" />
@@ -123,10 +123,6 @@
         </copy>
     </target>
 
-   <target name="_setVersion">
-        <replace file="${javaGenerated}/javolution/Javolution.java" token="@VERSION@" value="${version}.${release} (${vm}) ${TODAY}" />
-    </target>
-
     <target name="_make_classes_parameterized">
      	<!-- Replace Javolution Enum with Java Enum -->
         <replace dir="${javaGenerated}" token="javolution.lang.Enum" value="java.lang.Enum" includes="**/*.java" />
@@ -163,6 +159,10 @@
         </replace>
         <replace dir="${javaGenerated}/javolution" includes="**/Struct.java">
             <replacetoken><![CDATA[/*S*/Struct]]></replacetoken>
+            <replacevalue><![CDATA[ S ]]></replacevalue>
+        </replace>
+        <replace dir="${javaGenerated}/javolution" includes="**/Struct.java">
+            <replacetoken><![CDATA[/*S*/ Struct]]></replacetoken>
             <replacevalue><![CDATA[ S ]]></replacevalue>
         </replace>
         <replace dir="${javaGenerated}/javolution" includes="**/Struct.java">
@@ -262,8 +262,8 @@
         </zip>
     </target>
 
-    <target name="j2me" depends="clean, _init_j2me, _setVersion, _compile, doc, jar, _zip" />
-    <target name="gcj" depends="clean, _init_gcj, _setVersion, _compile, doc, jar, _zip">
+    <target name="j2me" depends="clean, _init_j2me, _compile, doc, jar, _zip" />
+    <target name="gcj" depends="clean, _init_gcj, _compile, doc, jar, _zip">
         <echo>Build shared library ${library}.so</echo>
         <exec executable="gcj">
             <arg line='-shared -o ${jarpath}.so ${jarpath}.jar' />
@@ -273,9 +273,9 @@
             <arg line='--main=javolution.Javolution -o ${jarpath}.exe ${jarpath}.jar' />
         </exec>
     </target>
-    <target name="1.4" depends="clean, _init_1.4, _setVersion, _compile, doc, jar, _zip" />
-    <target name="1.5" depends="clean, _init_1.5, _setVersion, _compile, doc, jar, _zip" />
-    <target name="1.6" depends="clean, _init_1.6, _setVersion, _compile, doc, jar, _zip" />
+    <target name="1.4" depends="clean, _init_1.4, _compile, doc, jar, _zip" />
+    <target name="1.5" depends="clean, _init_1.5, _compile, doc, jar, _zip" />
+    <target name="1.6" depends="clean, _init_1.6, _compile, doc, jar, _zip" />
     <target name="no-args">
         <echo>Please select one of the following targets:</echo>
         <echo>    j2me (J2ME CLDC 1.1+)</echo>
@@ -313,6 +313,6 @@
         </java>
     </target>
 
-    <target name="maven" depends="_init, _init_1.5, _setVersion" />
+    <target name="maven" depends="_init, _init_1.5" />
 
 </project>

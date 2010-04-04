@@ -16,14 +16,14 @@
     <!-- ==================================================== -->
     <groupId>javolution</groupId>
     <artifactId>javolution</artifactId>
-    <packaging>jar</packaging>
-    <version>5.4.5</version> <!-- Update version in build.xml when changed. -->
+    <packaging>bundle</packaging>
+    <version>5.5.0</version> <!-- Update version in build.xml when changed. -->
     <name>Javolution</name>
     <url>http://javolution.org</url>
     <description>Javolution - Java Solution for Real-Time and Embedded Systems.
         This project uses template classes to generates java code for various versions
         of the Java run-time (e.g. J2ME, 1.4, GCJ, 1.5). The default maven compilation
-        builds executable for Java 1.5+ (parameterized classes).
+        builds OSGI bundle for Java 1.5+ (parameterized classes).
         For others targets the ant script should be used directly (e.g. "ant j2me").
     </description>
     <licenses>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>4.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -165,20 +165,14 @@
             <!--     Packaging                                           -->
             <!-- ======================================================= -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>javolution.Javolution</mainClass>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                    <excludes>
-                        <exclude>_templates/**</exclude>
-                    </excludes>
+                    <instructions>
+                        <Export-Package>javolution.*</Export-Package>
+                        <Private-Package>!*</Private-Package>
+                    </instructions>
                 </configuration>
             </plugin>
             <plugin>

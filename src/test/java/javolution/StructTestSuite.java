@@ -6,16 +6,16 @@
  * Permission to use, copy, modify, and distribute this software is
  * freely granted, provided that this notice is preserved.
  */
-package _templates.javolution;
+package javolution;
 
-import _templates.java.nio.ByteOrder;
-import _templates.java.util.List;
-import _templates.java.util.ArrayList;
-import _templates.javolution.io.Struct;
-import _templates.javolution.testing.TestCase;
-import _templates.javolution.testing.TestContext;
-import _templates.javolution.testing.TestSuite;
-import _templates.javolution.text.Text;
+import java.nio.ByteOrder;
+import java.util.List;
+import java.util.ArrayList;
+import javolution.io.Struct;
+import javolution.testing.TestCase;
+import javolution.testing.TestContext;
+import javolution.testing.TestSuite;
+import javolution.text.Text;
 
 /**
  * <p> This class holds the test cases for the {@link javolution.io io} classes.</p>
@@ -24,14 +24,16 @@ import _templates.javolution.text.Text;
  */
 public final class StructTestSuite extends TestSuite {
 
-    /** @JVM-1.5+@
+    /** */
     enum TestEnum {
-    D,
-    B,
-    A,
-    C,
+
+        D,
+        B,
+        A,
+        C,
     }
     /**/
+
     public StructTestSuite() {
         addStructTests(ByteOrder.BIG_ENDIAN);
         addStructTests(ByteOrder.LITTLE_ENDIAN);
@@ -42,7 +44,7 @@ public final class StructTestSuite extends TestSuite {
         addTest(new StructFloat32Test(byteOrder));
         addTest(new StructFloat64Test(byteOrder));
 
-        /** @JVM-1.5+@
+        /** */
         addTest(new StructEnum8Test(byteOrder));
         addTest(new StructEnum16Test(byteOrder));
         addTest(new StructEnum32Test(byteOrder));
@@ -85,107 +87,116 @@ public final class StructTestSuite extends TestSuite {
         }
     }
 
-    /** @JVM-1.5+@
+    /** */
     private static class StructEnum8Test extends BaseStructTest {
-    private TestStruct struct;
 
-    private StructEnum8Test(ByteOrder order) {
-    super("Enum8", order);
-    }
+        private TestStruct struct;
 
-    public void execute() throws Exception {
-    struct = new TestStruct(order);
-    struct.enum8.set(TestEnum.A);
-    }
+        private StructEnum8Test(ByteOrder order) {
+            super("Enum8", order);
+        }
 
-    public void validate() throws Exception {
-    TestContext.assertEquals(TestEnum.A, struct.enum8.get(), "enum8 setting failed.");
-    }
+        public void execute() throws Exception {
+            struct = new TestStruct(order);
+            struct.enum8.set(TestEnum.A);
+        }
 
-    private static class TestStruct extends BaseTestStruct {
-    final Enum8 enum8 = new Enum8(TestEnum.values());
+        public void validate() throws Exception {
+            TestContext.assertEquals(TestEnum.A, struct.enum8.get(), "enum8 setting failed.");
+        }
 
-    private TestStruct(ByteOrder order) {
-    super(order);
-    }
-    }
+        private static class TestStruct extends BaseTestStruct {
+
+            final Enum8 enum8 = new Enum8(TestEnum.values());
+
+            private TestStruct(ByteOrder order) {
+                super(order);
+            }
+        }
     }
 
     private static class StructEnum16Test extends BaseStructTest {
-    private TestStruct struct;
 
-    private StructEnum16Test(ByteOrder order) {
-    super("Enum16", order);
-    }
+        private TestStruct struct;
 
-    public void execute() throws Exception {
-    struct = new TestStruct(order);
-    struct.enum16.set(TestEnum.B);
-    }
+        private StructEnum16Test(ByteOrder order) {
+            super("Enum16", order);
+        }
 
-    public void validate() throws Exception {
-    TestContext.assertEquals(TestEnum.B, struct.enum16.get(), "enum16 setting failed.");
-    }
+        public void execute() throws Exception {
+            struct = new TestStruct(order);
+            struct.enum16.set(TestEnum.B);
+        }
 
-    private static class TestStruct extends BaseTestStruct {
-    final Enum16 enum16 = new Enum16(TestEnum.values());
+        public void validate() throws Exception {
+            TestContext.assertEquals(TestEnum.B, struct.enum16.get(), "enum16 setting failed.");
+        }
 
-    private TestStruct(ByteOrder order) {
-    super(order);
-    }
-    }
+        private static class TestStruct extends BaseTestStruct {
+
+            final Enum16 enum16 = new Enum16(TestEnum.values());
+
+            private TestStruct(ByteOrder order) {
+                super(order);
+            }
+        }
     }
 
     private static class StructEnum32Test extends BaseStructTest {
-    private TestStruct struct;
 
-    private StructEnum32Test(ByteOrder order) {
-    super("Enum32", order);
-    }
+        private TestStruct struct;
 
-    public void execute() throws Exception {
-    struct = new TestStruct(order);
-    struct.enum32.set(TestEnum.B);
-    }
+        private StructEnum32Test(ByteOrder order) {
+            super("Enum32", order);
+        }
 
-    public void validate() throws Exception {
-    TestContext.assertEquals(TestEnum.B, struct.enum32.get(), "enum32 setting failed.");
-    }
+        public void execute() throws Exception {
+            struct = new TestStruct(order);
+            struct.enum32.set(TestEnum.B);
+        }
 
-    private static class TestStruct extends BaseTestStruct {
-    final Enum32 enum32 = new Enum32(TestEnum.values());
+        public void validate() throws Exception {
+            TestContext.assertEquals(TestEnum.B, struct.enum32.get(), "enum32 setting failed.");
+        }
 
-    private TestStruct(ByteOrder order) {
-    super(order);
-    }
-    }
+        private static class TestStruct extends BaseTestStruct {
+
+            final Enum32 enum32 = new Enum32(TestEnum.values());
+
+            private TestStruct(ByteOrder order) {
+                super(order);
+            }
+        }
     }
 
     private static class StructEnum64Test extends BaseStructTest {
-    private TestStruct struct;
 
-    private StructEnum64Test(ByteOrder order) {
-    super("Enum64", order);
-    }
+        private TestStruct struct;
 
-    public void execute() throws Exception {
-    struct = new TestStruct(order);
-    struct.enum64.set(TestEnum.B);
-    }
+        private StructEnum64Test(ByteOrder order) {
+            super("Enum64", order);
+        }
 
-    public void validate() throws Exception {
-    TestContext.assertEquals(TestEnum.B, struct.enum64.get(), "enum64 setting failed.");
-    }
+        public void execute() throws Exception {
+            struct = new TestStruct(order);
+            struct.enum64.set(TestEnum.B);
+        }
 
-    private static class TestStruct extends BaseTestStruct {
-    final Enum64 enum64 = new Enum64(TestEnum.values());
+        public void validate() throws Exception {
+            TestContext.assertEquals(TestEnum.B, struct.enum64.get(), "enum64 setting failed.");
+        }
 
-    private TestStruct(ByteOrder order) {
-    super(order);
-    }
-    }
+        private static class TestStruct extends BaseTestStruct {
+
+            final Enum64 enum64 = new Enum64(TestEnum.values());
+
+            private TestStruct(ByteOrder order) {
+                super(order);
+            }
+        }
     }
     /**/
+
     private static class StructFloat32Test extends BaseStructTest {
 
         private TestStruct struct;

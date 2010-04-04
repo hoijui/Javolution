@@ -11,7 +11,6 @@ package _templates.javolution.text;
 import java.io.IOException;
 
 import _templates.java.lang.CharSequence;
-import _templates.javolution.Javolution;
 import _templates.javolution.context.LocalContext;
 import _templates.javolution.lang.ClassInitializer;
 import _templates.javolution.lang.Realtime;
@@ -318,7 +317,7 @@ public abstract class TextFormat/*<T>*/ {
 
         public Appendable format(Object obj, Appendable dest)
                 throws IOException {
-            dest.append(Javolution.j2meToCharSeq(obj.getClass().getName()));
+            dest.append(j2meToCharSeq(obj.getClass().getName()));
             dest.append('#');
             return TypeFormat.format(System.identityHashCode(obj), dest);
         }
@@ -336,7 +335,7 @@ public abstract class TextFormat/*<T>*/ {
 
         public Appendable format(Object obj, Appendable dest)
                 throws IOException {
-            return dest.append(Javolution.j2meToCharSeq(obj));
+            return dest.append(j2meToCharSeq(obj));
         }
 
         public Object parse(CharSequence csq, Cursor cursor) {
@@ -444,7 +443,7 @@ public abstract class TextFormat/*<T>*/ {
 
         public Appendable format(Object obj, Appendable dest)
                 throws IOException {
-            return dest.append(Javolution.j2meToCharSeq(((Class) obj).getName()));
+            return dest.append(j2meToCharSeq(((Class) obj).getName()));
         }
 
         public Object parse(CharSequence csq, Cursor cursor) {
@@ -472,5 +471,14 @@ public abstract class TextFormat/*<T>*/ {
             return Text.valueOf(subCsq.toString());
         }
     };
+
+    private static CharSequence j2meToCharSeq(Object str) {
+        /*@JVM-1.4+@
+        return (CharSequence) str;
+        }
+        private static Text dummy(Object str) { // Never used.
+        /**/
+        return str == null ? null : Text.valueOf(str);
+    }
 
 }

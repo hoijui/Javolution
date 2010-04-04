@@ -8,7 +8,6 @@
  */
 package _templates.javolution.xml;
 
-import _templates.javolution.Javolution;
 import _templates.javolution.lang.Reflection;
 import _templates.javolution.lang.Reusable;
 import _templates.javolution.util.FastMap;
@@ -268,11 +267,10 @@ public class XMLBinding implements Reusable, XMLSerializable {
                 return;
             if (_classAttribute.getNamespaceURI() == null) {
                 writer.writeAttribute(_classAttribute.getLocalName(),
-                        Javolution.j2meToCharSeq(name));
+                        QName.j2meToCharSeq(name));
             } else {
                 writer.writeAttribute(_classAttribute.getNamespaceURI(),
-                        _classAttribute.getLocalName(), Javolution
-                                .j2meToCharSeq(name));
+                        _classAttribute.getLocalName(), QName.j2meToCharSeq(name));
             }
         } else {
             if (qName != null) {
@@ -282,7 +280,7 @@ public class XMLBinding implements Reusable, XMLSerializable {
             		writer.writeStartElement(qName.getNamespaceURI(), qName.getLocalName());
             	}
             } else {
-                writer.writeStartElement(Javolution.j2meToCharSeq(name));
+                writer.writeStartElement(QName.j2meToCharSeq(name));
             }
         }
     }

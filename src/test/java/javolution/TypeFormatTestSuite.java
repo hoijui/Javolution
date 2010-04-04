@@ -6,14 +6,14 @@
  * Permission to use, copy, modify, and distribute this software is
  * freely granted, provided that this notice is preserved.
  */
-package _templates.javolution;
+package javolution;
 
-import _templates.javolution.lang.MathLib;
-import _templates.javolution.testing.TestCase;
-import _templates.javolution.testing.TestContext;
-import _templates.javolution.testing.TestSuite;
-import _templates.javolution.text.TextBuilder;
-import _templates.javolution.text.TypeFormat;
+import javolution.lang.MathLib;
+import javolution.testing.TestCase;
+import javolution.testing.TestContext;
+import javolution.testing.TestSuite;
+import javolution.text.TextBuilder;
+import javolution.text.TypeFormat;
 
 /**
  * <p> This class holds the test cases for the {@link TypeFormat}
@@ -57,7 +57,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class ParseBoolean extends TestCase {
 
         boolean[] _expected = new boolean[N];
+
         boolean[] _actual = new boolean[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -95,7 +97,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class BooleanParse extends TestCase {
 
         boolean[] _expected = new boolean[N];
+
         boolean[] _actual = new boolean[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -131,7 +135,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class ParseInt extends TestCase {
 
         int[] _expected = new int[N];
+
         int[] _actual = new int[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -178,7 +184,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class IntegerParseInt extends TestCase {
 
         int[] _expected = new int[N];
+
         int[] _actual = new int[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -225,7 +233,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class ParseLong extends TestCase {
 
         long[] _expected = new long[N];
+
         long[] _actual = new long[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -272,7 +282,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class LongParseLong extends TestCase {
 
         long[] _expected = new long[N];
+
         long[] _actual = new long[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -397,7 +409,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class ParseDouble extends TestCase {
 
         double[] _expected = new double[N];
+
         double[] _actual = new double[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -442,7 +456,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class DoubleParseDouble extends TestCase {
 
         double[] _expected = new double[N];
+
         double[] _actual = new double[N];
+
         String[] _strings = new String[N];
 
         public String getName() {
@@ -490,7 +506,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class FormatBoolean extends TestCase {
 
         boolean[] _expected = new boolean[N];
+
         boolean[] _actual = new boolean[N];
+
         TextBuilder[] _appendables = new TextBuilder[N];
 
         public String getName() {
@@ -525,7 +543,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class StringBufferAppendBoolean extends TestCase {
 
         boolean[] _expected = new boolean[N];
+
         boolean[] _actual = new boolean[N];
+
         StringBuffer[] _appendables = new StringBuffer[N];
 
         public String getName() {
@@ -560,7 +580,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class FormatInt extends TestCase {
 
         int[] _expected = new int[N];
+
         int[] _actual = new int[N];
+
         TextBuilder[] _appendables = new TextBuilder[N];
 
         public String getName() {
@@ -598,7 +620,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class StringBufferAppendInt extends TestCase {
 
         int[] _expected = new int[N];
+
         int[] _actual = new int[N];
+
         StringBuffer[] _appendables = new StringBuffer[N];
 
         public String getName() {
@@ -636,7 +660,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class FormatLong extends TestCase {
 
         long[] _expected = new long[N];
+
         long[] _actual = new long[N];
+
         TextBuilder[] _appendables = new TextBuilder[N];
 
         public String getName() {
@@ -674,7 +700,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class StringBufferAppendLong extends TestCase {
 
         long[] _expected = new long[N];
+
         long[] _actual = new long[N];
+
         StringBuffer[] _appendables = new StringBuffer[N];
 
         public String getName() {
@@ -758,7 +786,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class FormatDouble extends TestCase {
 
         double[] _expected = new double[N];
+
         double[] _actual = new double[N];
+
         TextBuilder[] _appendables = new TextBuilder[N];
 
         public String getName() {
@@ -797,7 +827,9 @@ public final class TypeFormatTestSuite extends TestSuite {
     class StringBufferAppendDouble extends TestCase {
 
         double[] _expected = new double[N];
+
         double[] _actual = new double[N];
+
         StringBuffer[] _appendables = new StringBuffer[N];
 
         public String getName() {

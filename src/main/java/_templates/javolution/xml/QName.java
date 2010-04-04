@@ -12,6 +12,7 @@ import _templates.java.io.ObjectStreamException;
 import _templates.java.lang.CharSequence;
 import _templates.javolution.lang.Immutable;
 import _templates.javolution.text.CharArray;
+import _templates.javolution.text.Text;
 import _templates.javolution.text.TextBuilder;
 import _templates.javolution.util.FastComparator;
 import _templates.javolution.util.FastMap;
@@ -216,11 +217,21 @@ public final class QName implements XMLSerializable, Immutable, CharSequence {
      *         (start > end) || (end > this.length())</code>
      */
     public CharSequence subSequence(int start, int end) {
-        return _templates.javolution.Javolution.j2meToCharSeq(_toString.substring(start, end));
+        return QName.j2meToCharSeq(_toString.substring(start, end));
     }
 
     //Maintains unicity.
     private Object readResolve() throws ObjectStreamException {
         return QName.valueOf(_toString);
     }
+
+    static CharSequence j2meToCharSeq(Object str) {
+        /*@JVM-1.4+@
+        return (CharSequence) str;
+        }
+        private static Text dummy(Object str) { // Never used.
+        /**/
+        return str == null ? null : Text.valueOf(str);
+    }
+
 }

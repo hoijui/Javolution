@@ -13,7 +13,6 @@ import _templates.javolution.text.Appendable;
 import _templates.java.util.Collection;
 import _templates.java.util.Iterator;
 import _templates.java.util.Map;
-import _templates.javolution.Javolution;
 import _templates.javolution.context.PersistentContext;
 import _templates.javolution.lang.ClassInitializer;
 import _templates.javolution.lang.Configurable;
@@ -1194,6 +1193,6 @@ public abstract class XMLFormat/*<T>*/ {
     };
 
     private static CharSequence toCsq/**/(Object str) {
-        return Javolution.j2meToCharSeq(str);
+        return QName.j2meToCharSeq(str);
     }
 }
