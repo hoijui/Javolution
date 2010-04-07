@@ -236,30 +236,31 @@
             <!-- ======================================================= -->
             <!--     Report on test results                              -->
             <!-- ======================================================= -->
- <!--           <plugin>
+           <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
             </plugin>
--->
+
             <!-- ======================================================= -->
             <!--     Report on test coverage                             -->
             <!-- ======================================================= -->
- <!--           <plugin>
+           <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>emma-maven-plugin</artifactId>
                 <version>1.0-alpha-1</version>
             </plugin>
--->
-            <!-- ======================================================= -->
+
+           <!-- ======================================================= -->
            <!--     Static analysis for occurences of bug patterns      -->
            <!-- ======================================================= -->
-<!--            <plugin>
+<!--
+           <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>2.1</version>
-            </plugin>
--->
-        </plugins>
+           </plugin>
+  -->
+         </plugins>
     </reporting>
 
     <!-- ================================================================== -->

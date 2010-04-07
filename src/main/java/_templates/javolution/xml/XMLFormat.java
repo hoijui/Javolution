@@ -1192,6 +1192,59 @@ public abstract class XMLFormat/*<T>*/ {
         }
     };
 
+    /**
+     * Holds the default XML representation of a configurable. Because
+     * configurable instances are unique. Deserialisation of a configurable
+     * returns this unique instance (typically public static) and configure
+     * its value accordingly. The default XML representation consists of
+     * the name of the configurable as an attribute and its optional new value
+     * as a nested element. For example:[code]
+     *   <javolution.lang.Configurable name="javolution.context.ConcurrentContext#MAXIMUM_CONCURRENCY" />
+     *      <Value class="java.lang.Integer" value="0"/>
+     *   </javolution.lang.Configurable>
+     * [/code]
+     * XML configuration files can be read directly using the
+     * {@link #read(java.io.InputStream)} utility method.
+     */
+    static final XMLFormat CONFIGURABLE_XML = new XMLFormat(Configurable.class) {
+
+        public Object newInstance(Class cls, InputElement xml) throws XMLStreamException {
+            return Configurable.getInstance(xml.getAttribute("name", ""));
+        }
+
+        public void write(Object c, OutputElement xml) throws XMLStreamException {
+            Configurable cfg = (Configurable) c;
+            xml.setAttribute("name", cfg.getName());
+            xml.add(cfg.get(), "Value");
+        }
+
+        public void read(InputElement xml, Object c) throws XMLStreamException {
+            Object value = xml.get("Value");
+            if (value == null)
+                return; // Optional value not present.
+            Configurable.configure((Configurable) c, value);
+        }
+    };
+
+    /**
+     * Holds the XML representation for persistent contexts
+     * (holds persistent reference mapping).
+     */
+    static final XMLFormat PERSISTENT_CONTEXT_XML = new XMLFormat(
+            PersistentContext.class) {
+        public void read(InputElement xml, Object obj)
+                throws XMLStreamException {
+            final PersistentContext ctx = (PersistentContext) obj;
+            ctx.getIdToValue().putAll((FastMap) xml.get("References"));
+        }
+
+        public void write(Object obj, OutputElement xml)
+                throws XMLStreamException {
+            final PersistentContext ctx = (PersistentContext) obj;
+            xml.add(ctx.getIdToValue(), "References");
+        }
+    };
+
     private static CharSequence toCsq/**/(Object str) {
         return QName.j2meToCharSeq(str);
     }

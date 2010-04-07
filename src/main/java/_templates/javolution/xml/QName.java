@@ -225,11 +225,10 @@ public final class QName implements XMLSerializable, Immutable, CharSequence {
         return QName.valueOf(_toString);
     }
 
+    // For J2ME Compatibility.
     static CharSequence j2meToCharSeq(Object str) {
         /*@JVM-1.4+@
-        return (CharSequence) str;
-        }
-        private static Text dummy(Object str) { // Never used.
+        if (true) return (CharSequence) str;
         /**/
         return str == null ? null : Text.valueOf(str);
     }

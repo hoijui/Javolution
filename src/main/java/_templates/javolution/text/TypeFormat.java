@@ -711,12 +711,10 @@ public final class TypeFormat {
             throw new NumberFormatException("Extraneous character: '" + csq.charAt(inc) + "'");
     }
 
-
-    private static CharSequence j2meToCharSeq(Object str) {
+    // For J2ME Compatibility.
+    static CharSequence j2meToCharSeq(Object str) {
         /*@JVM-1.4+@
-        return (CharSequence) str;
-        }
-        private static Text dummy(Object str) { // Never used.
+        if (true) return (CharSequence) str;
         /**/
         return str == null ? null : Text.valueOf(str);
     }

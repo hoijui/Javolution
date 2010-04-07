@@ -283,35 +283,11 @@
         <echo>    1.4 (J2SE 1.4+)</echo>
         <echo>    1.5 (J2SE 1.5+)</echo>
         <echo>    1.6 (J2SE 1.6+)</echo>
-        <echo>    test (executes built-in tests in TestContext)</echo>
-        <echo>    time (executes built-in tests in TimeContext)</echo>
-        <echo>(use -Ddebug=off to turn off debug information)</echo>
+         <echo>(use -Ddebug=off to turn off debug information)</echo>
         <fail message="No target specified"/>
     </target>
 
     <target name="compile" depends="clean, _init_1.5, _compile, jar, doc" />
-
-    <target name="test" depends="clean, _init_1.6, _compile">
-        <java classpath="${bin}" classname="javolution.Javolution" fork="true">
-            <jvmarg value="-server" />
-            <jvmarg value="-Xms512M" />
-            <jvmarg value="-Xmx512M" />
-            <jvmarg value="-XX:+UseConcMarkSweepGC" />
-            <jvmarg value="-XX:CompileThreshold=1" />
-            <arg value="test" />
-        </java>
-    </target>
-
-    <target name="time" depends="clean, _init_1.6, _compile">
-        <java classpath="${bin}" classname="javolution.Javolution" fork="true">
-            <jvmarg value="-server" />
-            <jvmarg value="-Xms512M" />
-            <jvmarg value="-Xmx512M" />
-            <jvmarg value="-XX:+UseConcMarkSweepGC" />
-            <jvmarg value="-XX:CompileThreshold=1" />
-            <arg value="time" />
-        </java>
-    </target>
 
     <target name="maven" depends="_init, _init_1.5" />
 
