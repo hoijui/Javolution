@@ -170,7 +170,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>javolution.*</Export-Package>
+                        <Export-Package>javolution.*,javax.realtime</Export-Package>
                         <Private-Package>!*</Private-Package>
                     </instructions>
                 </configuration>
