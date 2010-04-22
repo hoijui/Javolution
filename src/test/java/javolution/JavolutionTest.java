@@ -18,7 +18,6 @@ import javolution.testing.TestCase;
  * @version 5.3, March 21, 2009
  */
 public class JavolutionTest extends junit.framework.TestSuite {
-
     public static junit.framework.Test suite() {
         JavolutionTest suite = new JavolutionTest();
         for (TestCase test : new TypeFormatTestSuite().tests()) {

@@ -8,9 +8,21 @@
  */
 package _templates.javolution.xml;
 
+import _templates.java.util.Collection;
+import _templates.java.util.Iterator;
+import _templates.java.util.Map;
+import _templates.javolution.lang.Configurable;
 import _templates.javolution.lang.Reflection;
 import _templates.javolution.lang.Reusable;
+import _templates.javolution.text.CharArray;
+import _templates.javolution.text.TextBuilder;
+import _templates.javolution.text.TextFormat;
+import _templates.javolution.util.FastList;
 import _templates.javolution.util.FastMap;
+import _templates.javolution.util.FastSet;
+import _templates.javolution.util.FastTable;
+import _templates.javolution.xml.XMLFormat.InputElement;
+import _templates.javolution.xml.XMLFormat.OutputElement;
 import _templates.javolution.xml.stream.XMLStreamException;
 import _templates.javolution.xml.stream.XMLStreamReader;
 import _templates.javolution.xml.stream.XMLStreamWriter;
@@ -292,5 +304,113 @@ public class XMLBinding implements Reusable, XMLSerializable {
         _classToAlias.reset();
     }
 
+    //////////////////////////////////////////////////
+    // PREDEFINED FORMATS (LOADED ONLY IF REQUIRED) //
+    //////////////////////////////////////////////////
+
+    /**
+     * Holds the static XML format for <code>java.lang.Object.class</code> instances.
+     * The XML representation consists of the text representation of the object
+     * as a "value" attribute.
+     */
+    static final XMLFormat OBJECT_XML = new XMLFormat(Object.class) {
+      public boolean isReferenceable() {
+            return false; // Always by value (immutable).
+        }
+
+        public Object newInstance(Class cls,
+                _templates.javolution.xml.XMLFormat.InputElement xml)
+                throws XMLStreamException {
+            TextFormat format = TextFormat.getInstance(cls);
+            if (!format.isParsingSupported())
+                throw new XMLStreamException("No XMLFormat or TextFormat (with parsing supported) for instances of " + cls);
+            CharArray value = xml.getAttribute("value");
+            if (value == null) throw new XMLStreamException("Missing value attribute (to be able to parse the instance of " + cls + ")");
+            return format.parse(value);
+        }
+
+        public void read(InputElement xml, Object obj)
+                throws XMLStreamException {
+            // Do nothing.
+        }
+
+        public void write(Object obj, OutputElement xml)
+                throws XMLStreamException {
+            TextBuilder tmp = TextBuilder.newInstance();
+            try {
+                TextFormat.getInstance(obj.getClass()).format(obj, tmp);
+                xml.setAttribute("value", tmp);
+            } finally {
+                TextBuilder.recycle(tmp);
+            }
+        }
+    };
+
+
+    /**
+     * Holds the default XML representation for <code>java.util.Collection</code>
+     * instances. This representation consists of nested XML elements one for
+     * each element of the collection. The elements' order is defined by
+     * the collection iterator order. Collections are deserialized using their
+     * default constructor.
+     */
+    static final XMLFormat COLLECTION_XML = new XMLFormat(
+            _templates.java.util.Collection.class) {
+
+        public void read(InputElement xml, Object obj)
+                throws XMLStreamException {
+            Collection collection = (Collection) obj;
+            while (xml.hasNext()) {
+                collection.add(xml.getNext());
+            }
+        }
+
+        public void write(Object obj, OutputElement xml)
+                throws XMLStreamException {
+            Collection collection = (Collection) obj;
+            for (Iterator i = collection.iterator(); i.hasNext();) {
+                xml.add(i.next());
+            }
+        }
+    };
+
+    /**
+     * Holds the default XML representation for <code>java.util.Map</code>
+     * instances. This representation consists of key/value pair as nested
+     * XML elements. For example:[code]
+     * <javolution.util.FastMap>
+     *     <Key class="java.lang.String" value="ONE"/>
+     *     <Value class="java.lang.Integer" value="1"/>
+     *     <Key class="java.lang.String" value="TWO"/>
+     *     <Value class="java.lang.Integer" value="2"/>
+     *     <Key class="java.lang.String" value="THREE"/>
+     *     <Value class="java.lang.Integer" value="3"/>
+     * </javolution.util.FastMap>[/code]
+     *
+     * The elements' order is defined by the map's entries iterator order.
+     * Maps are deserialized using their default constructor.
+     */
+    static final XMLFormat MAP_XML = new XMLFormat(_templates.java.util.Map.class) {
+
+        public void read(InputElement xml, Object obj)
+                throws XMLStreamException {
+            final Map map = (Map) obj;
+            while (xml.hasNext()) {
+                Object key = xml.get("Key");
+                Object value = xml.get("Value");
+                map.put(key, value);
+            }
+        }
+
+        public void write(Object obj, OutputElement xml)
+                throws XMLStreamException {
+            final Map map = (Map) obj;
+            for (Iterator it = map.entrySet().iterator(); it.hasNext();) {
+                Map.Entry entry = (Map.Entry) it.next();
+                xml.add(entry.getKey(), "Key");
+                xml.add(entry.getValue(), "Value");
+            }
+        }
+    };
 
 }

@@ -98,12 +98,13 @@ import _templates.javolution.xml.XMLSerializable;
  *     
  * <p> {@link FastMap} are {@link Reusable reusable}; they maintain an 
  *     internal pool of <code>Map.Entry</code> objects. When an entry is removed
- *     from a map, it is automatically restored to its pool (unless the map
- *     is shared in which case the removed entry is candidate for garbage 
- *     collection as it cannot be safely recycled).</p>
+ *     from a map, it is automatically restored to its pool. Any new entry is
+ *     allocated in the same memory area as the map itself (RTSJ). If the map
+ *     is shared, removed entries are not recycled but only dereferenced
+ *     (to maintain thread-safety) </p>
  *     
  * <p> {@link #shared() Shared} maps do not use internal synchronization, except in case of
- *     concurrent modifications of the map structure (entry added/deleted).
+ *     concurrent modifications of the map structure (entries being added/deleted).
  *     Reads and iterations are never synchronized and never blocking.
  *     With regards to the memory model, shared maps are equivalent to shared 
  *     non-volatile variables (no "happen before" guarantee). They can be used 
@@ -113,7 +114,10 @@ import _templates.javolution.xml.XMLSerializable;
  *         ...
  *         public String toString() {
  *             String label = labels.get(this); // No synchronization.
- *             return label != null ? label : makeLabel();
+ *             if (label != null) return label;
+ *             label = makeLabel();
+ *             labels.put(this, label);
+ *             return label;
  *         }
  *    }[/code]</p>
  *            
@@ -597,7 +601,7 @@ public class FastMap/*<K,V>*/ implements Map/*<K,V>*/, Reusable,
                     subMap.mapEntry(entry);
                     if (((subMap._entryCount + subMap._nullCount) << 1) >= subMap._entries.length) {
                         // Serious problem submap already full, don't use submap just resize.
-                        LogContext.warning("Unevenly distributed hash code - Degraded Preformance");
+                        LogContext.warning("Unevenly distributed hash code - Degraded Performance");
                         Entry[] tmp = new Entry[tableLength];
                         copyEntries(_entries, tmp, _entries.length);
                         _entries = tmp;

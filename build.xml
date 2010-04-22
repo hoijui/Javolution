@@ -8,7 +8,7 @@
         <tstamp />
         <property name="library" value="javolution" />
         <property name="version" value="5.5" />
-        <property name="release" value="0" />
+        <property name="release" value="1" />
         <property name="jarpath" value="target/${library}-${version}.${release}" />
         <property name="javaGenerated" value="target/generated-sources/java" />
         <property name="javaSource" value="src/main/java" />

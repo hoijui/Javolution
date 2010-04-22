@@ -268,4 +268,23 @@ public class PersistentContext extends Context {
         }
     }
 
+    /**
+     * Holds the XML representation for persistent contexts
+     * (holds persistent reference mapping).
+     */
+    static final XMLFormat PERSISTENT_CONTEXT_XML = new XMLFormat(
+            PersistentContext.class) {
+        public void read(InputElement xml, Object obj)
+                throws XMLStreamException {
+            final PersistentContext ctx = (PersistentContext) obj;
+            ctx.getIdToValue().putAll((FastMap) xml.get("References"));
+        }
+
+        public void write(Object obj, OutputElement xml)
+                throws XMLStreamException {
+            final PersistentContext ctx = (PersistentContext) obj;
+            xml.add(ctx.getIdToValue(), "References");
+        }
+    };
+
 }

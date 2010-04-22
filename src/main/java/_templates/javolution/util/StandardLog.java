@@ -266,11 +266,8 @@ public class StandardLog extends LogContext {
 
     public void logError(Throwable error, CharSequence message) {
         String description = (message != null) ? message.toString() : "";
-        if (error != null) {
-            _logger.log(Level.SEVERE, description, error);
-        } else {
-            _logger.log(Level.SEVERE, description);            
-        }
+        description = (error != null) ? error.toString() + " " + description : description;
+        _logger.severe(description);
     }
 
     protected void logMessage(String category, CharSequence message) {

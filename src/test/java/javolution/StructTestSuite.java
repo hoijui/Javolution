@@ -396,11 +396,11 @@ public final class StructTestSuite extends TestSuite {
 
         public void execute() throws Exception {
             struct = new TestStruct(order);
-            struct.unsigned8.set((short) 123);
+            struct.unsigned8.set((short) 0x88);
         }
 
         public void validate() throws Exception {
-            TestContext.assertEquals((short) 123, struct.unsigned8.get(), Text.valueOf("Unsigned8 setting failed."));
+            TestContext.assertEquals((short) 0x88, struct.unsigned8.get(), Text.valueOf("Unsigned8 setting failed."));
         }
 
         private static class TestStruct extends BaseTestStruct {
@@ -423,11 +423,11 @@ public final class StructTestSuite extends TestSuite {
 
         public void execute() throws Exception {
             struct = new TestStruct(order);
-            struct.unsigned16.set(325);
+            struct.unsigned16.set(0x8888);
         }
 
         public void validate() throws Exception {
-            TestContext.assertEquals(325, struct.unsigned16.get(), Text.valueOf("Unsigned16 setting failed."));
+            TestContext.assertEquals(0x8888, struct.unsigned16.get(), Text.valueOf("Unsigned16 setting failed."));
         }
 
         private static class TestStruct extends BaseTestStruct {
@@ -450,11 +450,11 @@ public final class StructTestSuite extends TestSuite {
 
         public void execute() throws Exception {
             struct = new TestStruct(order);
-            struct.unsigned32.set(0x22222222);
+            struct.unsigned32.set(0x88888888L);
         }
 
         public void validate() throws Exception {
-            TestContext.assertEquals(0x22222222, struct.unsigned32.get(), Text.valueOf("Unsigned32 setting failed."));
+            TestContext.assertEquals(0x88888888L, struct.unsigned32.get(), Text.valueOf("Unsigned32 setting failed."));
         }
 
         private static class TestStruct extends BaseTestStruct {

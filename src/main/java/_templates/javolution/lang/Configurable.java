@@ -10,12 +10,11 @@ package _templates.javolution.lang;
 
 import _templates.javolution.context.LogContext;
 import _templates.javolution.context.SecurityContext;
+import _templates.javolution.text.Text;
 import _templates.javolution.text.TextFormat;
 import _templates.javolution.util.FastTable;
 import _templates.javolution.xml.XMLBinding;
 import _templates.javolution.xml.XMLFormat;
-import _templates.javolution.xml.XMLFormat.InputElement;
-import _templates.javolution.xml.XMLFormat.OutputElement;
 import _templates.javolution.xml.XMLObjectReader;
 import _templates.javolution.xml.stream.XMLStreamException;
 import java.io.InputStream;
@@ -40,7 +39,7 @@ import java.util.Enumeration;
  *      With the following (using this class):[code]
  *      class Document {
  *          public static final Configurable<Font> DEFAULT_FONT
- *              = new Configurable<Font>(new Font("Arial", Font.BOLD, 18)) {};
+ *              = new Configurable<Font>(new Font("Arial", Font.BOLD, 18));
  *          ...
  *      }[/code]
  *      Not only the second example is cleaner, but the actual configuration
@@ -51,7 +50,7 @@ import java.util.Enumeration;
  * <p>  Configurable instances have the same textual representation as their
  *      current values. For example:[code]
  *       public static final Configurable<String> AIRPORT_TABLE
- *            = new Configurable<String>("Airports") {};
+ *            = new Configurable<String>("Airports");
  *       ...
  *       String sql = "SELECT * FROM " + AIRPORT_TABLE
  *           // AIRPORT_TABLE.get() is superfluous
@@ -66,7 +65,7 @@ import java.util.Enumeration;
  *      external servers, system properties, etc.[code]
  *      public abstract class FastComparator<T> implements Comparator<T>, Serializable  {
  *          public static final Configurable<Boolean> REHASH_SYSTEM_HASHCODE
- *              = new Configurable<Boolean>(isPoorSystemHash()) {}; // Test system hashcode.
+ *              = new Configurable<Boolean>(isPoorSystemHash()); // Test system hashcode.
  *      ...
  *      public abstract class ConcurrentContext extends Context {
  *          public static final Configurable<Integer> MAXIMUM_CONCURRENCY
@@ -75,7 +74,7 @@ import java.util.Enumeration;
  *     ...
  *     public abstract class XMLInputFactory {
  *          public static final Configurable<Class<? extends XMLInputFactory>> CLASS
- *              = new Configurable<Class<? extends XMLInputFactory>>(XMLInputFactory.Default.class) {};
+ *              = new Configurable<Class<? extends XMLInputFactory>>(XMLInputFactory.Default.class);
  *                  // Default class implementation is a private class.
  *     ...
  *     [/code]</p>
@@ -139,19 +138,24 @@ import java.util.Enumeration;
  *      </Configuration>[/code]</p>
  *       
  * @author  <a href="mailto:jean-marie@dautelle.com">Jean-Marie Dautelle</a>
- * @version 5.4, November 2, 2009
+ * @version 5.5, April 20, 2010
  */
-public abstract class Configurable/*<T>*/ {
+public class Configurable/*<T>*/ {
 
     /**
      * Holds the current value (never null).
      */
-    private volatile Object/*{T}*/ _value;
+    private Object/*{T}*/ _value;
 
     /**
      * Holds the default value (never null).
      */
     private final Object/*{T}*/ _default;
+
+    /**
+     * Holds the class where this configurable is defined.
+     */
+    private final Class _container;
 
     /**
      * Creates a new configurable having the specified default value.
@@ -165,6 +169,24 @@ public abstract class Configurable/*<T>*/ {
             throw new IllegalArgumentException("Default value cannot be null");
         _default = defaultValue;
         _value = defaultValue;
+        _container = Configurable.findContainer();
+    }
+
+    private static Class findContainer() {
+        /* @JVM-1.4+@
+        try {
+        StackTraceElement[] stack = new Throwable().getStackTrace();
+        String className = stack[2].getClassName();
+        int sep = className.indexOf("$");
+        if (sep >= 0) { // If inner class, remove suffix.
+        className = className.substring(0, sep);
+        }
+        return Class.forName(className); // We use the caller class loader (and avoid dependency to Reflection utility).
+        } catch (Throwable error) {
+        LogContext.error(error);
+        }
+        /**/
+        return null;
     }
 
     /**
@@ -186,26 +208,13 @@ public abstract class Configurable/*<T>*/ {
     }
 
     /**
-     * Notifies this configurable that its runtime value is going to be changed.
-     * The default implementation does nothing.
+     * Returns the container class of this configurable (the class
+     * where this configurable is defined as a <code>public static</code> field.
      *
-     * @param oldValue the previous value.
-     * @param newValue the new value.
-     * @throws UnsupportedOperationException if dynamic reconfiguration of 
-     *         this configurable is not allowed (regardless of the security
-     *         context).
+     * @return the container class or <code>null</code> if unknown (e.g. J2ME).
      */
-    protected void notifyChange(Object/*{T}*/ oldValue, Object/*{T}*/ newValue)
-            throws _templates.java.lang.UnsupportedOperationException {
-    }
-
-    /**
-     * Returns the string representation of the value of this configurable.
-     * 
-     * @return <code>String.valueOf(this.get())</code>
-     */
-    public String toString() {
-        return String.valueOf(_value);
+    public Class getContainer() {
+        return _container;
     }
 
     /**
@@ -217,21 +226,45 @@ public abstract class Configurable/*<T>*/ {
      *          of this configurable is unknown (e.g. J2ME).
      */
     public String getName() {
-        /* @JVM-1.5+@
-        Class cfgClass = this.getClass();
-        Class cls = cfgClass.getEnclosingClass();
-        java.lang.reflect.Field[] fields = cls.getDeclaredFields();
+        if (_container == null)
+            return null;
+
+        /* @JVM-1.4+@
         try {
+        java.lang.reflect.Field[] fields = _container.getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {
         java.lang.reflect.Field field = fields[i];
-        if (field.get(null) == this) // Found it.
-        return cls.getName() + '#' + field.getName();
+        if (java.lang.reflect.Modifier.isPublic(field.getModifiers()) && field.get(null) == this)
+        return _container.getName() + '#' + field.getName();
         }
-        } catch (IllegalAccessException ex) {
-        LogContext.error(ex);
+        } catch (Throwable error) {
+        LogContext.error(error);
         }
         /**/
         return null;
+    }
+
+    /**
+     * Notifies this configurable that its runtime value is going to be changed.
+     * The default implementation does nothing.
+     *
+     * @param oldValue the previous value.
+     * @param newValue the new value.
+     * @throws UnsupportedOperationException if dynamic reconfiguration of
+     *         this configurable is not allowed (regardless of the security
+     *         context).
+     */
+    protected void notifyChange(Object/*{T}*/ oldValue, Object/*{T}*/ newValue)
+            throws _templates.java.lang.UnsupportedOperationException {
+    }
+
+    /**
+     * Returns the string representation of the value of this configurable.
+     *
+     * @return <code>String.valueOf(this.get())</code>
+     */
+    public String toString() {
+        return String.valueOf(_value);
     }
 
     /**
@@ -245,20 +278,25 @@ public abstract class Configurable/*<T>*/ {
      *    class.</p>
      * @param  name the name of the configurable to retrieve.
      * @return the corresponding configurable or <code>null</code> if it
-     *         cannot be found (e.g..
+     *         cannot be found.
      */
     public static Configurable getInstance(String name) {
-        /* @JVM-1.4+@
         int sep = name.lastIndexOf('#');
         if (sep < 0)
-        return null;
+            return null;
         String className = name.substring(0, sep);
         String fieldName = name.substring(sep + 1);
         Class cls = Reflection.getInstance().getClass(className);
-        if (cls == null)
-        return null;
+        if (cls == null) {
+            LogContext.warning("Class " + className + " not found");
+            return null;
+        }
+        /* @JVM-1.4+@
         try {
         Configurable cfg = (Configurable) cls.getDeclaredField(fieldName).get(null);
+        if (cfg == null) {
+        LogContext.warning("Configurable " + name + " not found");
+        }
         return cfg;
         } catch (Exception ex) {
         LogContext.error(ex);
@@ -287,14 +325,20 @@ public abstract class Configurable/*<T>*/ {
         if (newValue == null)
             throw new IllegalArgumentException("Default value cannot be null");
         SecurityContext policy = (SecurityContext) SecurityContext.getCurrentSecurityContext();
+
+
         if (!policy.isConfigurable(cfg))
             throw new SecurityException(
                     "Configuration disallowed by SecurityContext");
         Object/*{T}*/ oldValue = cfg._value;
+
+
         if (!newValue.equals(oldValue)) {
             LogContext.info("Configurable " + cfg.getName() + " set to " + newValue);
             cfg._value = newValue;
             cfg.notifyChange(oldValue, newValue);
+
+
         }
     }
 
@@ -319,29 +363,28 @@ public abstract class Configurable/*<T>*/ {
      *    class.</p>
      *
      * @param properties the properties.
-     * @throws _templates.java.lang.UnsupportedOperationException on J2ME
-    @JVM-1.4+@
+     */
     public static void read(java.util.Properties properties) {
-    Enumeration e = properties.keys();
-    while (e.hasMoreElements()) {
-    String name = (String) e.nextElement();
-    String textValue = properties.getProperty(name);
-    Configurable cfg = Configurable.getInstance(name);
-    if (cfg == null)
-    continue;
-    // Use the default value to retrieve the configurable type
-    // and the associated textual format.
-    Class type = cfg.getDefault().getClass();
-    TextFormat format = TextFormat.getInstance(type);
-    if (!format.isParsingSupported()) {
-    LogContext.error("Cannot find suitable TextFormat to parse instances of " + type);
-    continue;
+        Enumeration e = properties.keys();
+        while (e.hasMoreElements()) {
+            String name = (String) e.nextElement();
+            String textValue = properties.getProperty(name);
+            Configurable cfg = Configurable.getInstance(name);
+            if (cfg == null)
+                continue;
+            // Use the default value to retrieve the configurable type
+            // and the associated textual format.
+            Class type = cfg.getDefault().getClass();
+            TextFormat format = TextFormat.getInstance(type);
+            if (!format.isParsingSupported()) {
+                LogContext.error("Cannot find suitable TextFormat to parse instances of " + type);
+                continue;
+            }
+            Object newValue = format.parse(Configurable.toCsq(textValue));
+            Configurable.configure(cfg, newValue);
+        }
     }
-    Object newValue = format.parse(textValue);
-    Configurable.configure(cfg, newValue);
-    }
-    }
-    /**/
+
     /**
      * Convenience method to read configurable values from the specified 
      * XML stream. This method uses
@@ -373,7 +416,13 @@ public abstract class Configurable/*<T>*/ {
     public static void read(InputStream inputStream) {
         try {
             XMLObjectReader reader = XMLObjectReader.newInstance(inputStream);
-            XMLBinding binding = new XMLBinding();
+            XMLBinding binding = new XMLBinding() {
+                protected XMLFormat getFormat(Class forClass) throws XMLStreamException  {
+                    if (Configurable.class.isAssignableFrom(forClass))
+                        return new ConfigurableXMLFormat();
+                    return super.getFormat(forClass);
+                }
+            };
             binding.setAlias(Configurable.class, "Configurable");
             reader.setBinding(binding);
             // Reads and configures.
@@ -383,4 +432,35 @@ public abstract class Configurable/*<T>*/ {
         }
     }
 
+    // Local format for read operation.
+    private static class ConfigurableXMLFormat extends XMLFormat {
+
+        ConfigurableXMLFormat() {
+            super(null); // Unbounded
+        }
+
+        public Object newInstance(Class cls, InputElement xml) throws XMLStreamException {
+            return Configurable.getInstance(xml.getAttribute("name", ""));
+        }
+
+        public void write(Object c, OutputElement xml) throws XMLStreamException {
+            throw new _templates.java.lang.UnsupportedOperationException();
+        }
+
+        public void read(InputElement xml, Object c) throws XMLStreamException {
+            Object value = xml.get("Value");
+            if (value == null)
+                return; // Optional value not present.
+            Configurable.configure((Configurable) c, value);
+        }
+    };
+
+    // For J2ME Compatibility.
+    private static _templates.java.lang.CharSequence toCsq(Object str) {
+        /*@JVM-1.4+@
+        if (true) return (CharSequence) str;
+        /**/
+        return str == null ? null : Text.valueOf(str);
+
+    }
 }

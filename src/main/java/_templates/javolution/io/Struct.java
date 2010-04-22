@@ -1199,7 +1199,7 @@ public class Struct {
         public short get() {
             final int index = getByteBufferPosition() + offset();
             int word = getByteBuffer().get(index);
-            return (short) ((bitLength() == 8) ? word : get(1, word));
+            return (short) (0xFF & ((bitLength() == 8) ? word : get(1, word)));
         }
 
         public void set(short value) {
@@ -1265,7 +1265,7 @@ public class Struct {
         public int get() {
             final int index = getByteBufferPosition() + offset();
             int word = getByteBuffer().getShort(index);
-            return (bitLength() == 16) ? word : get(2, word);
+            return  0xFFFF & ((bitLength() == 16) ? word : get(2, word));
         }
 
         public void set(int value) {
@@ -1579,7 +1579,7 @@ public class Struct {
         public Enum/*T*/ get() {
             final int index = getByteBufferPosition() + offset();
             int word = getByteBuffer().get(index);
-            return _values[get(1, word)];
+            return _values[0xFF & get(1, word)];
         }
 
         public void set(Enum/*T*/ e) {
@@ -1617,7 +1617,7 @@ public class Struct {
         public Enum/*T*/ get() {
             final int index = getByteBufferPosition() + offset();
             int word = getByteBuffer().getShort(index);
-            return _values[get(2, word)];
+            return _values[0xFFFF & get(2, word)];
         }
 
         public void set(Enum/*T*/ e) {
