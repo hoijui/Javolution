@@ -15,7 +15,6 @@ import java.io.OutputStream;
 import _templates.java.lang.UnsupportedOperationException;
 import _templates.java.nio.ByteBuffer;
 import _templates.java.nio.ByteOrder;
-import _templates.java.util.List;
 import _templates.javolution.lang.Configurable;
 import _templates.javolution.lang.Enum;
 import _templates.javolution.lang.MathLib;
@@ -148,7 +147,7 @@ import _templates.javolution.text.TextBuilder;
  *             Java NIO package are directly applicable to Struct/Union.</i></p>
  *
  * @author  <a href="mailto:jean-marie@dautelle.com">Jean-Marie Dautelle</a>
- * @version 5.4.6, April 1, 2010
+ * @version 5.5.1, April 1, 2010
  */
 public class Struct {
 
@@ -181,9 +180,9 @@ public class Struct {
     private int _alignment = 1;
 
     /**
-     * Holds this struct's size.
+     * Holds this struct's length.
      */
-    private int _size;
+    private int _length;
 
     /**
      * Holds the index position during construction.
@@ -229,7 +228,8 @@ public class Struct {
      * @return the C/C++ <code>sizeof(this)</code>.
      */
     public final int size() {
-        return _size;
+        return (_alignment <= 1) ? _length :
+            ((_length + _alignment - 1) / _alignment) * _alignment;
     }
 
     /**
@@ -517,7 +517,7 @@ public class Struct {
         if (struct._outer != null)
             throw new IllegalArgumentException(
                     "struct: Already an inner struct");
-        Member inner = new Member(struct._size << 3, struct._alignment); // Update indexes.
+        Member inner = new Member(struct.size() << 3, struct._alignment); // Update indexes.
         struct._outer = this;
         struct._outerOffset = inner.offset();
         return (/*S*/Struct) struct;
@@ -932,7 +932,7 @@ public class Struct {
                 while (_bitsUsed > (_wordSize << 3)) {
                     _index++;
                     _wordSize++;
-                    _size = MathLib.max(_size, _index);
+                    _length = MathLib.max(_length, _index);
                 }
                 return; // Bit field merge done.
             }
@@ -960,7 +960,7 @@ public class Struct {
             _index += MathLib.max(wordSize, (bitLength + 7) >> 3);
             _wordSize = wordSize;
             _bitsUsed = bitLength;
-            _size = MathLib.max(_size, _index);
+            _length = MathLib.max(_length, _index);
             // size and index may differ because of {@link Union}
         }
 
